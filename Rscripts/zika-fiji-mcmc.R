@@ -107,8 +107,6 @@ diag(cov_matrix_thetaAll)
 (st.time <- Sys.time())
 
 m = 1; iiM=1
-non_null_likelihood_found <- NA
-
 foreach(iiM=multichain) %dopar% {  # Loop over regions with parallel MCMC chains
 
 adapt_size_start <- round(0.1*MCMC.runs)
@@ -150,10 +148,10 @@ for (m in 1:MCMC.runs){
   
   ## Resample global theta every 2nd step
   if(m %% 2==0){
-    output_theta = SampleTheta(global=1,thetatab_current,theta_initAlltab_current[iiH,],cov_matrix_theta,cov_matrix_theta_init)
-    theta_star=output_theta$thetaS
+    output_theta <- SampleTheta(global=1,thetatab_current,theta_initAlltab_current[iiH,],cov_matrix_theta,cov_matrix_theta_init)
+    theta_star <- output_theta$thetaS
   }else{
-    theta_star=thetatab_current
+    theta_star <- thetatab_current
   }
   
   ## Resample local parameters every step
@@ -209,10 +207,6 @@ for (m in 1:MCMC.runs){
     estimated_params <- colnames(cov_matrix_thetaA)[diag(cov_matrix_thetaA)!=0]
     q_theta_given_theta_star = sum(log(thetaAllstar[iiH, estimated_params]))
     q_theta_star_given_theta = sum(log(thetaAlltab_current[1, estimated_params]))
-  
-  #if(m == 1){
-  #  prior.star = 1 
-  #}
   
   val <- (prior.star/prior.current)*exp((sim_marg_lik_star-sim_liktab_current) +  (q_theta_given_theta_star - q_theta_star_given_theta)) 
   

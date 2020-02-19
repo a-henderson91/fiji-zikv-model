@@ -5,7 +5,7 @@
 #' @param parameter_est_file Name of csv file with parameters to be estimated included
 #' @export
 
-results_set_up <- function(iiH, parameter_est_file){
+results_set_up <- function(s, parameter_est_file){
   # Set up vectors for storing their values during MCMC loop
   thetaAll=data.frame(rep(NA,locnn))
   for (i in 1:(length(thetaR_IC_local$param)-1)){
@@ -83,7 +83,6 @@ for(iiH in itertab){
 ## Covariance matrices 
 parameters_est <- read.csv(paste0("data/",parameter_est_file,".csv"), stringsAsFactors = F) 
 parms_to_est <- parameters_est$parameters_est
-if(sample.start.point==T){parms_to_est <- c(parms_to_est, "t0")}
 compartments_to_est <- parameters_est$compartments_est
 
 #theta - global

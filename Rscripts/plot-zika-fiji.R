@@ -4,29 +4,38 @@
 # github.com/
 # - - - - - - - - - - - - - - - - - - - - - - - 
 
+virus <- "DEN3"  # "ZIKV
+
 output_simulations <- F
 output_diagnostics <- T
 ll <- 1
 
 here::here()
-preamblecode <- list.files(here::here("Rscripts/"))[grepl("preamble", list.files(here::here("Rscripts/")))] #"preamble_conditions_zikafit.R"
-source(here::here("Rscripts",preamblecode))
+if(virus=="ZIKV"){
+  iiH <- 1
+  preamblecode <- "preamble_zikvfiji.R"
+  post_file_path <- "posterior_output"
+}else if(virus=="DEN3"){
+  iiH <- 2
+  preamblecode <- "preamble_denv3.R"
+  post_file_path <- "posterior_denv2014fit"
+}
+source(here::here("Rscripts", preamblecode))
 
 # load vectorbornefit code ------------------------------------------------
 all_files <- list.files(here::here("Rfunctions"))
 sapply(all_files, function(xx){source(here::here("Rfunctions/", xx))})
 
-
 # import posteriors -------------------------------------------------------
 labelN <- 1
-iiH <- 1
-m.tot <- length(list.files(path = here::here("posterior_output"), pattern = paste0("*", run.name)))
-load_posterior_1 <- load.posteriors(load.run.name=run.name, file.path="posterior_output", iiH, mcmc.burn=mcmc.burn)
+m.tot <- length(list.files(path = here::here(post_file_path), pattern = paste0("*", run.name)))
+load_posterior_1 <- load.posteriors(load.run.name=run.name, file.path=post_file_path, iiH, mcmc.burn=mcmc.burn)
   list2env(load_posterior_1,globalenv())
 
 # load data --------------------------------------------------------------
-data <- load.data.multistart(Virus = "ZIKV", startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0) #virusTab[iiH], dataTab[iiH])
+data <- load.data.multistart(Virus = virusTab[iiH], startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0) #virusTab[iiH], dataTab[iiH])
   list2env(data,globalenv())
+
 # load BEAST tmrca posterior - from "Export start time Central Division.R"
 load("beast/fj-c-tmrca.RData")
 tmrcaBEAST <- fj.C.tmrca.date
@@ -45,11 +54,10 @@ ggplot(data=tmrca, aes(colour=data_type, fill=data_type)) +
   theme_zika_fiji() +
   theme(legend.title=element_blank())
 ll <- ll+1
-dev.copy(pdf, "output/fig1A_introHist.pdf", 8, 6)
+dev.copy(pdf, paste0("output/fig1A_introHist_",virus,".pdf"), 8, 6)
   dev.off()
 
 # fig1B - case data -------------------------------------------------------
-
 #virusTab[1] <- virusTab[2]
 #locationtab[1] <- locationtab[2]
 #dataTab[1] <- dataTab[2]
@@ -91,14 +99,19 @@ casecollect$DATINTRVW <- as.Date(casecollect$DATINTRVW)
 
 cexplot=1.5
 par(mfrow=c(1,1), mar = c(3,4,1,5))
+if(virus=="ZIKV"){tt="h"}else{tt="l"}
 hist(c(startdate + tmrcaBEAST[1:length(thetatab$intro_mid)]), breaks = 1000, col=col2a, border=col2a,
      ylim=c(0,0.01), main="", ylab="", yaxt='n', xaxt="n", xlab="", 
      freq=F,
      xlim=c(as.Date("2013-01-08"), as.Date("2018-01-01")))
 par(new=T)
-plot(case.data$dates, case.data$y.vals, col=col1, lwd=cexplot, pch=16, bty='n',ylim=c(0,50),type='h', 
+plot(case.data$dates, case.data$y.vals, col=col1, lwd=cexplot, pch=16, bty='n',ylim=c(0,max(case.data$y.vals,na.rm=T)),type=tt, 
      xlab="Date", ylab="", yaxt='n', main="B", adj=0, xaxt='n')
-lines(casecollect$DATINTRVW, casecollect$dailysample, type="h", col="Gray")
+par(new=T)
+plot(casecollect$DATINTRVW, casecollect$dailysample, col="gray", lwd=cexplot, pch=16, bty='n',
+     ylim=c(0,50),type="h", 
+     xlab="Date", ylab="", yaxt='n', main="B", adj=0, xaxt='n')
+
 axis(4, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
 mtext("Zika cases", side=4, line=2, col=col1, cex=1)
 mtext("Serological samples collected", side=4, line=2, col="Gray", cex=1, padj = 1.5)
@@ -111,7 +124,7 @@ mtext("Dengue cases", side=2, line=2, col=col4, cex=1)
 grid(NA,NULL, lty = 1, col = colgrid) 
 mtext(LETTERS[ll],side=3, adj=0, font=2)
   ll <- ll+1
-dev.copy(pdf, "output/fig1B_caseData.pdf", 6, 4)
+dev.copy(pdf, paste0("output/fig1B_caseData_",virus,".pdf"), 6, 4)
   dev.off()
 
 # Fig 2 model trajectories ---------------------------------------------

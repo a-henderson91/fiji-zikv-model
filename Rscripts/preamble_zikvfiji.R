@@ -22,10 +22,11 @@ library(tidyverse)
 library(truncnorm)
 
 library(here)
+
 # model run options to change ---------------------------------------------
 #seasonal.transmission   <- T # whether to estimate seasonal transmission or not. If false - zeroes BETA_V_AMP after estimation in main script
 include.sero.likelihood <- T
-#vector.control          <- T # 
+vector.control          <- T # 
 include.2014.control    <- T # if False then beta_base set to 0
 run.name <- "0219_github" 
 ## MCMC parameters 
@@ -54,7 +55,6 @@ end.output.date <- as.Date("2018-01-01")
 seroposdates <- c(as.Date("2013-11-15"), as.Date("2015-11-02"), as.Date("2017-06-18")) ## dates of seroprevalence surveys
 
 # print model run info ------------------------------------------------
-print(paste0("sample start time? ", sample.start.point))
 print(paste0("MCMC runs = ", MCMC.runs))
 print(paste0("start date = ", as.Date(startdate)))
 print(paste0("No. serology dates = ", length(seroposdates)))

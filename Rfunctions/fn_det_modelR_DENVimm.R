@@ -9,12 +9,10 @@
 #' @param include.count True or False - whether to include count data in likelihood. Defaults to True
 #' @keywords deterministic
 #' @export
-
+#theta=c(theta_star,thetaA_star,theta_denv); theta_init=theta_init_star; locationI=locationtab[iiH]; seroposdates=seroposdates; include.count=include.count
 Deterministic_modelR_final_DENVimmmunity <- function(theta, theta_init, locationI, seroposdates, episeason, include.count=T){
-
-    
-    theta[["denv_start_point"]] <- as.Date("2013-10-27")-startdate
-    theta[["zika_start_point"]] <- theta[["intro_mid"]]
+    theta[["denv_start_point"]] <- as.Date("2013-10-27")-startdate ## 
+    theta[["zika_start_point"]] <- theta[["intro_mid"]] ## these are poorly named. "zika_start_point" just refers to the main disease of interest. And 'denv_start_point' is the fixed background DENV3
 
     # These values tell how to match states of compartment with data points
     sim.vals <- seq(0,max(time.vals)-min(time.vals),7) + 7
@@ -41,7 +39,7 @@ Deterministic_modelR_final_DENVimmmunity <- function(theta, theta_init, location
 
     # Output simulation data
     output <- simulate_deterministic_noage_DENVimm(theta, init1, time.vals.sim)
-
+    
     # Match compartment states at sim.vals time
     S_traj <- output[match(time.vals.sim,output$time),"s_init"]
     X_traj <- output[match(time.vals.sim,output$time),"sm_init"]
@@ -56,6 +54,7 @@ Deterministic_modelR_final_DENVimmmunity <- function(theta, theta_init, location
     casecountD <- casesD-c(0,casesD[1:(length(time.vals.sim)-1)])
     casecount <- cases1-c(0,cases1[1:(length(time.vals.sim)-1)])
     casecount[casecount<0] <- 0
+      #plot(date.vals, casecount[1:length(date.vals)])
       #plot(date.vals[1:length(casecount)],ReportC(cases = casecount,rep = theta['rep'], repvol = theta['repvol']),type='l', col=4)
       #points(date.vals,y.vals,type='l',col=2)
       #######
@@ -87,12 +86,10 @@ Deterministic_modelR_final_DENVimmmunity <- function(theta, theta_init, location
     }else{
       binom.lik=0
     }
-    date=seroposdates[1]
+    date <- seroposdates[1]
     ln.denv <- length(denv.timeseries)
     ln.full <- length(y.vals)
     first.zikv <- min(which(y.vals>0))
-    #theta[["iota"]] <- max(theta[["iota"]],1e-10)
-
     likelihood <- sum(binom.lik) + sum(log(dnbinom(y.vals,
                                                     mu=theta[["rep"]]*(casecount),
                                                    size=1/theta[["repvol"]])))
