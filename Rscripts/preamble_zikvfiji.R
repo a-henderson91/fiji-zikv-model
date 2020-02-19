@@ -23,10 +23,9 @@ library(truncnorm)
 
 library(here)
 # model run options to change ---------------------------------------------
-sample.start.point      <- 0 # sample t0 and estimate virus intro time (0 or 1) 
-seasonal.transmission   <- T # whether to estimate seasonal transmission or not. If false - zeroes BETA_V_AMP after estimation in main script
+#seasonal.transmission   <- T # whether to estimate seasonal transmission or not. If false - zeroes BETA_V_AMP after estimation in main script
 include.sero.likelihood <- T
-vector.control          <- T # 
+#vector.control          <- T # 
 include.2014.control    <- T # if False then beta_base set to 0
 run.name <- "0219_github" 
 ## MCMC parameters 

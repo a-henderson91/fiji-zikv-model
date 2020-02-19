@@ -62,8 +62,7 @@ for(iiH in itertab){
   }
   
   ## Initial compartment conditions
-  theta_initAll[iiH,"fpS_init"]=239800; theta_initAll[iiH,"fpI_init"]=200;
-    
+  #theta_initAll[iiH,"fpS_init"]=239800; theta_initAll[iiH,"fpI_init"]=200;
   initial_inf=as.numeric(thetaAll[iiH,'inf0'])/2
   init_vec=as.numeric(thetaAll[iiH,'vec0']/2)
   init_rec=as.numeric(thetaAll[iiH,'rec0'])*popsizeTot
