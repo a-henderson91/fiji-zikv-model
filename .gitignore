@@ -2,3 +2,6 @@
 local
 *_cache
 .Rproj.user
+.Rhistory
+*.RData
+Rplots.pdf
