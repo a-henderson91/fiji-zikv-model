@@ -99,10 +99,10 @@ if(months(max_curve)!="February"){
 
 burnin=0.2
 if(seasonal.transmission == T){
-  thetaAlltab[1,iiH,'beta_v_amp'] <- mordecai_amp
-  thetaAlltab[1,iiH,'beta_v_mid'] <- median(betas$mid[round(burnin*length(betas$mid)):length(betas$mid)])
+  thetaAlltab[1,,'beta_v_amp'] <- mordecai_amp
+  thetaAlltab[1,,'beta_v_mid'] <- median(betas$mid[round(burnin*length(betas$mid)):length(betas$mid)])
 }else{
-  thetaAlltab[1,iiH,'beta_v_amp'] <- 0
+  thetaAlltab[1,,'beta_v_amp'] <- 0
 }  
 # set weakly informative priors for main model fit 
 priorBeta_amp<-function(x){dunif(x,min=0, max=1)} 
