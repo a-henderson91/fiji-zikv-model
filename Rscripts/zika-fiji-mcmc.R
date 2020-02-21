@@ -9,13 +9,15 @@ source(here::here("Rscripts", preamblecode))
 
 r_functions <- list.files(here::here("Rfunctions/"), pattern="*.R")
 sapply(here::here("Rfunctions", r_functions), source, .GlobalEnv)
+data <- load.data.multistart(Virus = "ZIKV", startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0) #virusTab[iiH], dataTab[iiH])
 
 # Load and store denv2014 posteriors -----------------------------------------------
 labelN=1
-iiH=1
-load_posterior_1 <- load.posteriors(load.run.name="model1", file.path="posterior_denv2014fit", iiH, mcmc.burn=mcmc.burn)
+labelN <- 1
+iiH <- 2
+load_posterior_1 <- load.posteriors(load.run.name=model1_name, file.path="posterior_denv2014fit", iiH, mcmc.burn=mcmc.burn)
   list2env(load_posterior_1,globalenv())
-
+iiH <- 1
 ## fixed DENV3 2014 values 
 load(file=here::here("data/theta_denv.RData"))
 ## and justification
@@ -71,15 +73,11 @@ denv3_2014_esimates$beta_width <- median(thetatab$beta_width, na.rm=T)
 denv3_2014_esimates$mosq_ratio <- median(thetatab$m, na.rm=T)
 
 # Load ZIKV data  --------------------------------------------------------------
-source(here::here("Rscripts", preamblecode))
-data <- load.data.multistart(Virus = "ZIKV", startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0) #virusTab[iiH], dataTab[iiH])
-  list2env(data,globalenv())
+list2env(data,globalenv())
 
 # Set up results objects, initial values and covariance matrices ----------
 setup <- results_set_up(iiH, parameter_est_file = "parameters_est")
   list2env(setup, globalenv())
-theta_initAlltab[1,,]
-thetaAlltab[1,,]
 
 # Set up Priors  ----------------------------------------------------------
 source(here::here("Rscripts/prior_distributions.R"))
@@ -96,6 +94,17 @@ if(include.2014.control == T){
   thetaAlltab[1,iiH,'beta_base'] <- denv3_2014_esimates$beta_base
 }else{
   thetaAlltab[1,iiH,'beta_base'] <- 0
+}
+
+# run a single simulation with initial values -----------------------------
+source(here::here("Rscripts/zika-single-simulation.R"))
+initial_beta_h <- thetaAlltab[1,iiH,][["beta_h"]]
+zika_single_sim(initial_beta_h)
+if(zika_single_sim(initial_beta_h)==-Inf){
+  t_rate <- seq(0.3,0.4,0.01)
+  lik_search <- sapply(seq(0.3,0.4,0.01), function(xx){zika_single_sim(xx)})
+  max_beta_h <- t_rate[which(lik_search==max(lik_search))]
+  thetaAlltab[1,iiH,"beta_h"] <- max_beta_h
 }
 
 # Print starting conditions for model run --------------------------
