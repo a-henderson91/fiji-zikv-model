@@ -24,13 +24,15 @@ library(truncnorm)
 library(here)
 
 # model run options to change ---------------------------------------------
-#seasonal.transmission   <- T # whether to estimate seasonal transmission or not. If false - zeroes BETA_V_AMP after estimation in main script
+seasonal.transmission   <- T # whether to estimate seasonal transmission or not. If false - zeroes BETA_V_AMP after estimation in main script
 include.sero.likelihood <- T
 vector.control          <- T # 
 include.2014.control    <- T # if False then beta_base set to 0
 run.name <- "0219_github" 
+model1_name <- "0219_model1_denv3"
+  
 ## MCMC parameters 
-MCMC.runs <- 100 #number of MCMC iterations 
+MCMC.runs <- 1e5 #number of MCMC iterations 
 thinning.parameter <- 1
 multichain <- c(1:3)  # n chains to run in parallel
 mcmc.burn <- 0.4
@@ -38,10 +40,10 @@ mcmc.burn <- 0.4
 # data file names ---------------------------------------------------------
 locationtab <- c("Zika2016","Central2014") 
 dataTab <- c("Central_Fiji_2016Z_timeseries","Central_2014_timeseries") 
-virusTab <- c("Zika","DEN3")
+virusTab <- c("ZIKV","DEN3")
 serology.excel <- "Fiji_serology"
 init.conditions.excel <- "thetaR_IC_zika"
-iiH <- 1
+#iiH <- 1
 locnn <- 2 ## needs to be >1 to set up results matrix not vector
 itertab <- c(1:locnn)
 itertabM=c(1:1) # Iterate over locations in set up and MCMC
@@ -60,6 +62,8 @@ print(paste0("start date = ", as.Date(startdate)))
 print(paste0("No. serology dates = ", length(seroposdates)))
 print(paste0("Run name = ", run.name))
 print(paste0("No. of chains = ", length(multichain)))
+print(paste0("Name of model1 results = ", model1_name))
+print(paste0("Name of run = ", run.name))
 
 # colours for plots -------------------------------------------------------
 datacol=rgb(0.4,0.4,0.4)

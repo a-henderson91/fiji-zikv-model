@@ -31,7 +31,7 @@ include.2014.control    <- T # if False then beta_base set to 0
 run.name <- "0219_model1_denv3" 
 
 ## MCMC parameters 
-MCMC.runs <- 1e4 #number of MCMC iterations 
+MCMC.runs <- 1e5 #number of MCMC iterations 
 thinning.parameter <- 1
 multichain <- c(1:3)  # n chains to run in parallel
 mcmc.burn <- 0.4
@@ -42,7 +42,7 @@ mcmc.burn <- 0.4
 #virusTab <- c("DEN3","Zika")
 locationtab <- c("Zika2016","Central2014") # IF running Central2014 - this needs to go in position no.1
 dataTab <- c("Central_Fiji_2016Z_timeseries","Central_2014_timeseries") 
-virusTab <- c("Zika","DEN3")
+virusTab <- c("ZIKV","DEN3")
 serology.excel <- "Fiji_serology"
 init.conditions.excel <- "thetaR_IC_denv3"
 #iiH <- 1

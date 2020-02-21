@@ -4,7 +4,7 @@
 # github.com/
 # - - - - - - - - - - - - - - - - - - - - - - - 
 
-virus <- "DEN3"  # "ZIKV
+virus <- "ZIKV"  # DEN3 or ZIKV
 
 output_simulations <- F
 output_diagnostics <- T

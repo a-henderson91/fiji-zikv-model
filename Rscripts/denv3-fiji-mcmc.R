@@ -41,8 +41,8 @@ data.series <- ((data.series.max-data.series.min)/2)+data.series.min
 date.series <- weather.data$lsd[as.Date(weather.data$lsd)>=first.temp.date & as.Date(weather.data$lsd)<=max(as.Date(date.vals))]
 plot(date.series, data.series, type='l')
 
-betas <- weather.fit(data=data.series, iter=min(MCMC.runs, 1e5), tuning=10)
-  save(betas,file=paste("posterior_output_betas/outputBetas.RData",sep=""))
+#betas <- weather.fit(data=data.series, iter=min(MCMC.runs, 5e4), tuning=10)
+#  save(betas,file=paste("posterior_output_betas/outputBetas.RData",sep=""))
   load(file=paste("posterior_output_betas/outputBetas.RData",sep=""))
 
   plot(betas$lik[2,],betas$mid,type='p')
