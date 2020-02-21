@@ -11,7 +11,7 @@
 #' @export
 
 load.data.multistart <- function(Virus, add.nulls=0, startdate, serology.file.name, init.values.file.name){
-  if(Virus=="DEN3"){locnn_iiH <- 2}else{locnn_iiH <- 1}
+  if(Virus=="DEN3"){locnn_iiH <- 2}else if(Virus=="ZIKV"){locnn_iiH <- 1}
     cases.file.name <- dataTab[locnn_iiH]
   ## Load case data. First column must be 'date'. Column with data must be under same name as in locationtab
   timeser <- read.csv(paste0("data/",cases.file.name,".csv"), stringsAsFactors = F)  # Load ZIKA  data
