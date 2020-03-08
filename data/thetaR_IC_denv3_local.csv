@@ -19,7 +19,7 @@ t0,1,1
 beta_mask,1,1
 beta_base,0.58,0.5
 beta_grad,0.2,0.2
-beta_mid,470,210
+beta_mid,470,470
 beta_width,14,14
 sigma,NA,NA
 wane_mask,NA,NA
