@@ -14,8 +14,12 @@ Optionally adjust objects in `Rscripts/preamble_zikvfiji.R`. Here you can change
 * length of burn in of posteriors
 * give the model run a unique name
 
-`zika-fiji-mcmc.R` Main model fitting
-`plot-zika-fiji.R` Analysis of model fit. Figures 1-3
+## Guide to modelling in order
+1 - `denv3-fiji-mcmc.R` Model fitting to 2013-14 DENV-3 epidemic and temperature data
+2 - `beast/mono_2_beast.xml` Model sequence data to extract tMRCA for Fiji
+3 - `zika-fiji-mcmc.R` Main ZIKV transmission model fitting
+
+`plot-zika-fiji.R` Analysis of model fit. Figures 1-3, table 1. 
 
 ## Reference
-Published at X
+To be added
