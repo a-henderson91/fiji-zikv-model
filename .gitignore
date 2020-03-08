@@ -5,3 +5,7 @@ local
 .Rhistory
 *.RData
 Rplots.pdf
+*.pdf
+*.trees
+*.log
+output/
