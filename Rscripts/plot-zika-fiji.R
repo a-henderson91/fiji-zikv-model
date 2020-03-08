@@ -203,7 +203,7 @@ if(virusTab[1]=="DEN3"){
 axis(side=2,  bty='l', col.ticks = col1a, col=col1, col.axis=col1, col.lab=col1a)
 mtext("Dengue-3 cases", side=2, line=2, col=col1, cex=0.8)
 grid(NA,NULL, lty = 1, col = colgrid) 
-}else if(virusTab[1]=="Zika"){
+}else if(virusTab[1]=="ZIKV"){
 axis(side=4,  bty='l', col.ticks = col1a, col=col1, col.axis=col1, col.lab=col1a)
 mtext("Zika cases", side=4, line=2, col=col1, cex=0.8)
   par(new=T)

@@ -52,14 +52,14 @@ simulate_deterministic_noage_DENVimm <- function(theta, init.state, time.vals.si
       Ipos = extinct(I,1) # Need at least one infective
       Idpos = extinct(Id,1) # Need at least one infective
       
-      # French Polynesia Zika outbreak 
-      Ifp      = 1-intro_f(time, mid = theta[["zika_start_point"]], width = theta[["intro_width"]], base = theta[["intro_base"]]) 
+      # Introduction of ZIKV infections
+      intro_zikv    = 1-intro_f(time, mid = theta[["zika_start_point"]], width = theta[["intro_width"]], base = theta[["intro_base"]]) 
       initDenv = 1-intro_f(time, mid = theta[["denv_start_point"]], width = 0.25, base = 160) ## fixed so that approx ~160 introduction happen on 2013-10-27
       
       # Human population
       dS  =  - S*(lambda_h*IM)*Ipos - chi*Sd*(beta_d*Id/Nsize) + chi*(2*omega_d*T2d) 
       dE  =  S*(lambda_h*IM)*Ipos - alpha_h*E  
-      dI  = alpha_h*E  - gamma*I + Ifp
+      dI  = alpha_h*E  - gamma*I + intro_zikv
       dR  = gamma*I - rho*R
       dC  = alpha_h*E 
       

@@ -96,6 +96,21 @@ if(include.2014.control == T){
   thetaAlltab[1,iiH,'beta_base'] <- 0
 }
 
+## Plot "control function" with initial starting values
+control_plot_vals <- as.data.frame(t(thetaAlltab[1,iiH,]))
+control_plot <- sapply(time.vals, function(xx){control_f(xx, 
+                                         base=control_plot_vals$beta_base,
+                                         grad=control_plot_vals$beta_grad,
+                                         mid=control_plot_vals$beta_mid,
+                                         mid2=control_plot_vals$beta_mid+control_plot_vals$beta_width,
+                                         width=control_plot_vals$beta_width
+                                         )})
+plot(date.vals[30:100], control_plot[30:100], type="l", ylim=c(0,1), bty="n", ylab="Relative R0", xlab="Date", xaxt="n")
+axis.Date(side=1, at=seq.Date(date.vals[30], date.vals[100], by = "1 months"), "months", format = "%b%y")
+
+dev.copy(pdf, here::here("output/fig_supp_controlFn.pdf"), 6,4)
+  dev.off()
+  
 # run a single simulation with initial values -----------------------------
 source(here::here("Rscripts/zika-single-simulation.R"))
 initial_beta_h <- thetaAlltab[1,iiH,][["beta_h"]]
@@ -107,6 +122,19 @@ if(zika_single_sim(initial_beta_h)==-Inf){
   thetaAlltab[1,iiH,"beta_h"] <- max_beta_h
 }
 
+## Plot "introduction function" with initial starting values
+intro_plot_vals <- as.data.frame(t(thetaAlltab[1,iiH,]))
+intro_plot <- sapply(time.vals, function(xx){1-intro_f(xx, 
+                                                         mid=control_plot_vals$beta_mid,
+                                                         width=control_plot_vals$beta_width,
+                                                         base=control_plot_vals$intro_base
+)})
+plot(date.vals[20:90], intro_plot[20:90], type="l", ylim=c(0,1), bty="n", ylab="ZIKV introductions", xlab="Date", xaxt="n")
+axis.Date(side=1, at=seq.Date(date.vals[20], date.vals[90], by = "1 months"), "months", format = "%b%y")
+
+dev.copy(pdf, here::here("output/fig_supp_introFn.pdf"), 6,4)
+  dev.off()
+  
 # Print starting conditions for model run --------------------------
 print("Theta initial starting conditions")
 thetaAlltab[1,iiH,]

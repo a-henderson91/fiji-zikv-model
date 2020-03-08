@@ -79,6 +79,23 @@ rel_lowR0 <- lowR0/peakR0
 mordecai_amp <- (1-rel_lowR0)/(1+rel_lowR0)
 print(c("mordecai_amp",mordecai_amp))
 
+# Show Fiji temperature on Mordecai data ----------------------------------
+med_minT <- median(weather.data$min_air_temp, na.rm=T)
+lq_minT <- quantile(weather.data$min_air_temp, 0.25, na.rm=T)
+uq_minT <- quantile(weather.data$min_air_temp, 0.75, na.rm=T)
+med_maxT <- median(weather.data$max_air_temp, na.rm=T)
+lq_maxT <- quantile(weather.data$max_air_temp, 0.25, na.rm=T)
+uq_maxT <- quantile(weather.data$max_air_temp, 0.75, na.rm=T)
+## plot
+plot(mordecai_tempR0$aegy.temps.DTR8, mordecai_tempR0$R0.rel, type="l", bty="n", 
+     xlab="Temperature (C)", ylab="Relative R0")
+lines(c(med_minT,med_minT), c(0,1), col=col1)
+polygon(c(lq_minT, uq_minT, uq_minT,lq_minT), c(0,0,1,1), lty=0, col=col1a)
+lines(c(med_maxT,med_maxT), c(0,1), col=col2)
+polygon(c(lq_maxT, uq_maxT, uq_maxT, lq_maxT), c(0,0,1,1), lty=0, col=col2a)
+dev.copy(pdf, here::here("output/fig_supp_mordecaiFijitemp.pdf"), 6, 4)
+  dev.off()
+  
 # Check seasonality fit worked --------------------------------------------
 beta=mean(data.series, na.rm = T)
 (amp=median(betas$amp))
