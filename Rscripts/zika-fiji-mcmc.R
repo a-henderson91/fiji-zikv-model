@@ -1,7 +1,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - 
 # MCMC analysis of Zika transmission in Fiji  
 # Author: Alasdair Henderson
-# github.com/
+# github.com/a-henderson91/fiji-zikv-model
 # - - - - - - - - - - - - - - - - - - - - - - - 
 library(here)
 preamblecode <- "preamble_zikvfiji.R"
@@ -18,13 +18,8 @@ iiH <- 2
 load_posterior_1 <- load.posteriors(load.run.name=model1_name, file.path="posterior_denv2014fit", iiH, mcmc.burn=mcmc.burn)
   list2env(load_posterior_1,globalenv())
 iiH <- 1
-## fixed DENV3 2014 values 
+## fixed DENV3 2014 values to simulate 2013-14 DENV-3 outbreak
 load(file=here::here("data/theta_denv.RData"))
-## and justification
-  #output1 <- Deterministic_modelR_final_DENVimmmunity(theta=c(theta_star,thetaA_star,theta_denv), theta_init_star, locationI=locationtab[iiH], seroposdates=seroposdates, include.count=include.count)
-  #(sim_marg_lik_star=sim_marg_lik_star + output1$lik)
-  #plot(date.vals,output1$CD_trace[1:length(date.vals)]*0.1, type="l")
-  #points(denv_data$date.vals, denv_data$y.vals, col=2)
 
 ## load data
 denv_data <- load.data.multistart(Virus = "DEN3", startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0) #virusTab[iiH], dataTab[iiH])
@@ -80,6 +75,9 @@ setup <- results_set_up(iiH, parameter_est_file = "parameters_est")
   list2env(setup, globalenv())
 
 # Set up Priors  ----------------------------------------------------------
+## Estimate prior distribution for ZIKV intro time from BEAST output
+source(here::here("Rscripts/load_tmrca_calc_prior.R"))
+intro_prior_mu;intro_prior_sigma
 source(here::here("Rscripts/prior_distributions.R"))
 
 # Set initial values to posterior means form denvlike fit -----------------

@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - 
-# Transmission modelling preamble
+# Transmission modelling preamble for 2013-14 DENV-3
 # Author: Alasdair Henderson
 # github.com/a-henderson91/fiji-zikv-model
 # - - - - - - - - - - - - - - - - - - - - - - - 

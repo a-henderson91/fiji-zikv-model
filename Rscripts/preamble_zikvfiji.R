@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - 
-# Transmission modelling preamble
+# Transmission modelling preamble for ZIKV
 # Author: Alasdair Henderson
 # github.com/a-henderson91/fiji-zikv-model
 # - - - - - - - - - - - - - - - - - - - - - - - 
@@ -25,14 +25,14 @@ library(here)
 
 # model run options to change ---------------------------------------------
 seasonal.transmission   <- T # whether to estimate seasonal transmission or not. If false - zeroes BETA_V_AMP after estimation in main script
-include.sero.likelihood <- T
-vector.control          <- T # 
+include.sero.likelihood <- T # whether to include serological data in likelihood
+vector.control          <- T # whether to reduce transmission in March2014 when vector control campaign was in effect 
 include.2014.control    <- T # if False then beta_base set to 0
-run.name <- "0219_github" 
+run.name <- "0308_github" 
 model1_name <- "0219_model1_denv3"
   
 ## MCMC parameters 
-MCMC.runs <- 1e5 #number of MCMC iterations 
+MCMC.runs <- 2e5 #number of MCMC iterations 
 thinning.parameter <- 1
 multichain <- c(1:3)  # n chains to run in parallel
 mcmc.burn <- 0.4

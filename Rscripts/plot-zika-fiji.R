@@ -1,7 +1,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - 
 # Plots and analysis of posteriors for Fiji Zika transmission model  
 # Author: Alasdair Henderson
-# github.com/
+# github.com/a-henderson91/fiji-zikv-model
 # - - - - - - - - - - - - - - - - - - - - - - - 
 
 virus <- "ZIKV"  # DEN3 or ZIKV

@@ -1,7 +1,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - 
-# MCMC analysis of Zika transmission in Fiji  
+# MCMC analysis of 2013-14 DENV-3 transmission in Fiji  
 # Author: Alasdair Henderson
-# github.com/
+# github.com/a-henderson91/fiji-zikv-model
 # - - - - - - - - - - - - - - - - - - - - - - - 
 library(here)
 preamblecode <- "preamble_denv3.R"

@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - 
-# MCMC analysis of Zika transmission in Fiji  
+# Code to run one simulation of ZIKV transmission model
 # Author: Alasdair Henderson
 # github.com/
 # - - - - - - - - - - - - - - - - - - - - - - - 
