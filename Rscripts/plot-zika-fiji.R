@@ -46,9 +46,9 @@ names(tmrca) <- c("posterior","prior")
 tmrca <- gather(tmrca, data_type, density)
 
 ggplot(data=tmrca, aes(colour=data_type, fill=data_type)) +
-  geom_density(aes(density),lty=1) +
-  labs(x = "Virus introduction date", y = "Density", title = LETTERS[ll]) +
-  scale_x_date(limits = c(startdate, as.Date("2015-12-31")), date_breaks = "3 month", date_labels = "%m/%y") +
+  geom_histogram(aes(density), bins = 60) +
+  labs(x = "Virus introduction date", y = "Density", title = "") +
+  #scale_x_date(limits = c(startdate, as.Date("2015-12-31")), date_breaks = "3 month", date_labels = "%m/%y") +
   scale_colour_manual(labels = c("Posterior", "Prior"), values=c(col1, col2)) +
   scale_fill_manual(labels = c("Posterior", "Prior"), values=c(col1a, col2a)) +
   theme_zika_fiji() +
@@ -97,34 +97,34 @@ casecollect$x <- 1
 casecollect <- casecollect %>% group_by(DATINTRVW) %>% summarise(dailysample=sum(x))
 casecollect$DATINTRVW <- as.Date(casecollect$DATINTRVW) 
 
-cexplot=1.5
+cexplot <- 2.5
 par(mfrow=c(1,1), mar = c(3,4,1,5))
 if(virus=="ZIKV"){tt="h"}else{tt="l"}
+plot(casecollect$DATINTRVW, casecollect$dailysample, col="gray", lwd=cexplot, pch=16, bty='n',
+     ylim=c(0,50), type="h", 
+     xlab="Date", ylab="", yaxt='n', main="B", adj=0, xaxt='n')
+par(new=T)
 hist(c(startdate + tmrcaBEAST[1:length(thetatab$intro_mid)]), breaks = 1000, col=col2a, border=col2a,
      ylim=c(0,0.01), main="", ylab="", yaxt='n', xaxt="n", xlab="", 
      freq=F,
      xlim=c(as.Date("2013-01-08"), as.Date("2018-01-01")))
 par(new=T)
-plot(case.data$dates, case.data$y.vals, col=col1, lwd=cexplot, pch=16, bty='n',ylim=c(0,max(case.data$y.vals,na.rm=T)),type=tt, 
+plot(case.data$dates, case.data$y.vals, col=col1, lwd=cexplot, pch=16, bty='n',ylim=c(0,10),type=tt, 
      xlab="Date", ylab="", yaxt='n', main="B", adj=0, xaxt='n')
-par(new=T)
-plot(casecollect$DATINTRVW, casecollect$dailysample, col="gray", lwd=cexplot, pch=16, bty='n',
-     ylim=c(0,50),type="h", 
-     xlab="Date", ylab="", yaxt='n', main="B", adj=0, xaxt='n')
-
+text(as.Date("2015-01-07"), 4, "tMRCA", col = col2, font = 1)
 axis(4, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
-mtext("Zika cases", side=4, line=2, col=col1, cex=1)
-mtext("Serological samples collected", side=4, line=2, col="Gray", cex=1, padj = 1.5)
+mtext("Zika cases", side=4, line=2, col=col1, cex=1, font=1)
+mtext("Serological samples collected", side=4, line=2, col="Gray", cex=1, padj = 1.5, font=2)
 par(new=T)
 plot(case.data$dates, case.data$denv.cases, col=col4, lwd=cexplot, pch=16,type='l',
      #xaxt="n",
      xlab="Date",yaxt="n",ylab="",frame.plot=F)
 axis(2, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
-mtext("Dengue cases", side=2, line=2, col=col4, cex=1)
+mtext("Dengue cases", side=2, line=2, col=col4, cex=1, font=2)
 grid(NA,NULL, lty = 1, col = colgrid) 
-mtext(LETTERS[ll],side=3, adj=0, font=2)
+mtext("C",side=3, adj=0, font=1)
   ll <- ll+1
-dev.copy(pdf, paste0("output/fig1B_caseData_",virus,".pdf"), 6, 4)
+dev.copy(pdf, paste0("output/fig1B_caseData_",virus,".pdf"), width = 6, height = 4)
   dev.off()
 
 # Fig 2 model trajectories ---------------------------------------------
@@ -148,7 +148,9 @@ for(ii in 1:btsp){
   ivector[ii,]=c_trace_tab[pick,1:tMax]
   rvector[ii,]=(r_trace_tab[pick,1:tMax]/thetatab[pick,]$npop) + ((1- (r_trace_tab[pick,1:tMax]/thetatab[pick,]$npop))*epsilon)
   introvector[ii,]=sapply(time.vals[1:tMax], function(xx){1-intro_f(xx, mid = thetatab[pick,'intro_mid'], width = thetatab[pick,'intro_width'], base = thetatab[pick,'intro_base'])})
-  cvectorDENV[ii,]=ReportC(cd_trace_tab[pick,1:tMax], 0.12, 0.57)
+  if(length(cd_trace_tab)!=0){ ## if cd_trace_tab has been exported from main model run
+    cvectorDENV[ii,]=ReportC(cd_trace_tab[pick,1:tMax], 0.12, 0.57)
+  }
 }
 
 # Estimated number of cases 
@@ -180,7 +182,7 @@ ci_denv2 <- apply(cvectorDENV,2,function(x){quantile(x,0.975, na.rm=T)})
 
 # Fig 2A - infections and cases ---------------------------------------------
 par(mfrow=c(3,1))
-par(mgp=c(2,0.7,0),mar = c(3,4,1,4))
+par(mgp=c(2,0.7,0),mar = c(3,4,1.2,4))
 #
 y.vals.plot <- y.vals[1:tMax]
 y.vals.plot[y.vals.plot==0] <- NA
@@ -188,7 +190,7 @@ dataframe.p1 <- data.table(date.vals=date.vals, y.vals.plot, medP, ciP1, ciP2, c
                            medP_R, ciP1_R, ciP2_R, ciR150, ciR250,
                            med_denv, ci_denv1, ci_denv2)
 plot_fig2A <- DFdenv[dataframe.p1, on=.(dates = date.vals), roll=-Inf]
-dataframe.p1$med_denv
+
 ylims <- c(0, max(plot_fig2A$ciP2)*1.1)
 plot(plot_fig2A$dates, plot_fig2A$y.vals.plot, col=col1, cex=0.8, pch=16, bty='n',
      ylim=ylims, type='h', lwd=2,
@@ -201,17 +203,17 @@ polygon(c(plot_fig2A$dates, rev(plot_fig2A$dates)),
         c(plot_fig2A$ciP1, rev(plot_fig2A$ciP2)), col=col1a, lty=0)
 if(virusTab[1]=="DEN3"){
 axis(side=2,  bty='l', col.ticks = col1a, col=col1, col.axis=col1, col.lab=col1a)
-mtext("Dengue-3 cases", side=2, line=2, col=col1, cex=0.8)
+mtext("Dengue-3 cases", side=2, line=2, col=col1, cex=1)
 grid(NA,NULL, lty = 1, col = colgrid) 
 }else if(virusTab[1]=="ZIKV"){
 axis(side=4,  bty='l', col.ticks = col1a, col=col1, col.axis=col1, col.lab=col1a)
-mtext("Zika cases", side=4, line=2, col=col1, cex=0.8)
+mtext("Zika cases", side=4, line=2, col=col1)
   par(new=T)
   plot(plot_fig2A$dates, plot_fig2A$denv.cases, col=0, cex=0.8, pch=16, type='l',
        xaxt="n",yaxt="n",xlab="",ylab="",frame.plot=F)
-  lines(plot_fig2A$dates, plot_fig2A$denv.cases, col=col4, cex=0.8)
+  lines(plot_fig2A$dates, plot_fig2A$denv.cases, col=col4, cex=0.8, lwd = 2)
   axis(2, bty='l', col.ticks = col4a, col=col4, col.axis=col4, col.lab=col4a)
-  mtext("Dengue cases", side=2, line=2, col=col4, cex=0.8) # Label for 2nd axis
+  mtext("Dengue cases", side=2, line=2, col=col4) # Label for 2nd axis
     grid(NA,NULL, lty = 1, col = colgrid) 
 }
 mtext("A",side=3, adj=0, font=2)
@@ -239,26 +241,26 @@ axis(side=2, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
 axis.Date(1, at=seq(min(plot_fig2A$dates), max(plot_fig2A$dates), by="3 months"), 
           labels=format(seq(min(plot_fig2A$dates), max(plot_fig2A$dates), by="3 months"),"%b-%y"), las=1)
 par(new=T)
-lines(dataframe.p2$date.vals, dataframe.p2$med_intro, col=col7)
+lines(dataframe.p2$date.vals, dataframe.p2$med_intro, col=col7, lwd = 2)
 polygon(c(dataframe.p2$date.vals, rev(dataframe.p2$date.vals)), 
         c(dataframe.p2$ci_intro1,rev(dataframe.p2$ci_intro2)), lty=0, col=col7a)
-mtext("Introductions", side=2, line=2, col=col7, cex=0.8)
+mtext("Introductions", side=2, line=2, col=col7)
 par(new=T)
 ylims <- c(0, max(dataframe.p2$ciP2_R)*1.1)
-plot(dataframe.p2$date.vals, dataframe.p2$medP_R, type='l', lty=2, col=col5a, ylim=ylims, 
+plot(dataframe.p2$date.vals, dataframe.p2$medP_R, type='l', lty=2, col=col5a, ylim=ylims, lwd = 2,
      xaxt='n', xlab="", yaxt="n", ylab="", bty="n")
 axis(side=4,  bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
-mtext("Proportion seropostive", side=4, line=2, col=col5, cex=0.8)
+mtext("Prop. seropostive", side=4, line=2, col=col5)
 polygon(c(dataframe.p2$date.vals, rev(dataframe.p2$date.vals)), 
         c(dataframe.p2$ciP1_R, rev(dataframe.p2$ciP2_R)),
         col=col5a,lty=0)
 points(dataframe.sero$seroposdates, dataframe.sero$points, col=col5, cex=2, pch=16)
 lines(c(dataframe.sero$seroposdates[1],dataframe.sero$seroposdates[1]),
-      c(dataframe.sero$lci[1],dataframe.sero$uci[1]), col=col5)
+      c(dataframe.sero$lci[1],dataframe.sero$uci[1]), col=col5, lwd = 2)
 lines(c(dataframe.sero$seroposdates[2],dataframe.sero$seroposdates[2]),
-      c(dataframe.sero$lci[2],dataframe.sero$uci[2]), col=col5)
+      c(dataframe.sero$lci[2],dataframe.sero$uci[2]), col=col5, lwd = 2)
 lines(c(dataframe.sero$seroposdates[3],dataframe.sero$seroposdates[3]),
-      c(dataframe.sero$lci[3],dataframe.sero$uci[3]), col=col5)
+      c(dataframe.sero$lci[3],dataframe.sero$uci[3]), col=col5, lwd = 2)
 grid(NA,NULL, lty = 1, col = colgrid) 
 mtext("B",side=3, adj=0, font=2)
 
@@ -324,7 +326,7 @@ plot(dataframe.p3$date.vals, dataframe.p3$medR0, type='l', col=col2, bty="n", yl
 polygon(c(dataframe.p3$date.vals,rev(dataframe.p3$date.vals)),
         c(dataframe.p3$lciR0,rev(dataframe.p3$uciR0)),lty=0,col=col2a)
 axis(side=2, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
-mtext("Reproduction number", side=2, col=1, line=2, cex=0.8)
+mtext("Reproduction number", side=2, col=1, line=2, cex=1)
 lines(dataframe.p3$date.vals, dataframe.p3$medRR, col=col6)
 polygon(c(dataframe.p3$date.vals,rev(dataframe.p3$date.vals)),
         c(dataframe.p3$lciRR,rev(dataframe.p3$uciRR)),lty=0,col=col6a)
@@ -333,7 +335,7 @@ par(new=T)
 plot(dataframe.p3$date.vals, dataframe.p3$temp, type='l', col=rgb(0,0,0.1,alpha=0.4), bty="n", 
      xlab="Date", ylab="", yaxt="n")
 axis(side=4, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
-mtext("Average temperature", side=4, col=1, line=2, cex=0.8)
+mtext("Average temperature", side=4, col=1, line=2)
 grid(NA,NULL, lty = 1, col = colgrid) 
 mtext("C",side=3, adj=0, font=2)
 
@@ -420,31 +422,33 @@ infections_series$time_vals <- time_vals_sim
 infections_series$date_vals <- infections_series$time_vals + startdate
 
 short_infections_series <- infections_series %>%
-  filter(date_vals >= startdate+365 & date_vals <= as.Date("2017-01-01"))
+  filter(date_vals >= startdate+365 & date_vals <= as.Date("2016-06-01"))
 seasonal_wave <- sapply(short_infections_series$time_vals, function(xx){seasonal_f(xx, amp = thetaMax[["beta_v_amp"]], mid=thetaMax[["beta_v_mid"]])})
 
 sims <- dim(short_infections_series)[2]-2
-pdf(here::here("output/fig3_simulations.pdf"), 6, 10)
-par(mfcol=c(sims, 1), mar=c(5,4,4,4)+0.1)
+pdf(here::here("output/fig3_simulations.pdf"), width = 8, height = 6)
+par(mfcol=c(sims, 1), mar=c(2,4,1,4)+0.1)
 ylimmax <- short_infections_series %>% pivot_longer(cols=starts_with("2")) %>% summarise(max(value)) %>% pull()
 ylimits <- c(0, round(ylimmax*1.1,0))
 for(ii in 1:sims){
   plot_date_series <- short_infections_series$date_vals
   ##
-  plot(short_infections_series$date_vals, seasonal_wave, col="gray85", yaxt="n", ylab="", xaxt="n", xlab="", type='l', ylim=c(0,2), bty="n")
-  par(new=T)
-  plot(short_infections_series$date_vals, short_infections_series[,ii], type="l", col=4, ylab="Infections (blue)", xlab="Date", ylim=ylimits, xaxt="n", bty="n")
-  text(as.Date("2016-05-01"),ylimmax*(7/8), paste("Attack Rate","=",signif(sum(short_infections_series[,ii])/thetaMax[["npop"]],2)))
+  #plot(short_infections_series$date_vals, seasonal_wave, col="gray85", yaxt="n", ylab="", xaxt="n", xlab="", type='l', ylim=c(0,2), bty="n", lwd = 1.25)
+  #par(new=T)
+  plot(short_infections_series$date_vals, short_infections_series[,ii], type="l", col=col1, ylab="", xlab="Date", ylim=ylimits, xaxt="n", bty="n", lwd = 2)
+  mtext("Infections", side=2, line=2, col = col1)
+  text(as.Date("2016-01-01"),ylimmax*(7/8), paste("Attack Rate","=",signif(sum(short_infections_series[,ii])/thetaMax[["npop"]],2)))
   par(new=T)
   intros_series <- sapply(short_infections_series$time_vals, function(xx){1-intro_f(xx, mid = intros[ii], width = thetaMax[["intro_width"]], base = thetaMax[["intro_base"]])})
-  plot(short_infections_series$date_vals, intros_series, type="l", yaxt="n", ylab="", xaxt="n", xlab="", col=2, ylim=c(0,4), lty=2, bty="n")
-  axis.Date(side=1, at=seq.Date(min(plot_date_series), max(plot_date_series), by = "3 months"), "months", format = "%b%y")
+  plot(short_infections_series$date_vals, intros_series, type="l", yaxt="n", ylab="", xaxt="n", xlab="", col = col2, ylim=c(0,4), lty=2, bty="n", lwd = 1.25)
+  axis.Date(side=1, at=seq.Date(min(plot_date_series), max(plot_date_series)+180, by = "6 months"), "months", format = "%b %Y")
   axis(side=4)
-  mtext("Introductions (red)", side=4, line=2, cex=0.7)
-  mtext(LETTERS[ii],side=3, adj=0, font=2)
+  mtext("Introductions", side=4, line=2, col = col2)
+  mtext(LETTERS[ii], side=3, adj=0, font=2)
   grid(NA,NULL, lty = 1, col = colgrid) 
 }
   dev.off()
+  
 }
   
 
