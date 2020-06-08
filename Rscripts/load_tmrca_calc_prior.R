@@ -53,3 +53,21 @@ curve(dnorm(x, fit$estimate[1], fit$estimate[2]), col="red", lwd=2, add=T)
 # Save mean and sd --------------------------------------------------------
 intro_prior_mu <- fit$estimate[1] %>% as.numeric()
 intro_prior_sigma <- fit$estimate[2] %>% as.numeric()
+
+# plot MCMC convergence ---------------------------------------------------
+ess_tmrca <- signif(coda::effectiveSize(posterior$tmrca.fiji.C.[burnInRow]),6)
+
+png(here::here("output/BEAST_convergence.png"), res = 150, height = 6, width = 8, units = "in")
+par(mfrow = c(2,1), mar = c(4,4,1,0.2))
+plot(posterior$likelihood[burnInRow], type = "l", ylab = "Likelihood/prior dens.", col = col2, ylim = c(-4600, -4000))
+lines(posterior$prior[burnInRow], col = col1)
+legend("right", c("Prior", "Likelihood"), col=c(col1, col2), lwd=2, ncol = 1, cex = 1, pt.cex=1, inset=0.02, bty="n")
+mtext("A", adj = 0, font = 2)
+
+#plot(posterior$joint[burnInRow], type = "l", ylab = "Joint dist. (burnin)", col = col7a)
+plot(posterior$tmrca.fiji.C.[burnInRow], type = "l", ylab = "tMRCA, Central Div.", col = col7)
+mtext(paste0("ESS = ", ess_tmrca), adj = 1, font = 2)
+mtext("B", adj = 0, font = 2)
+dev.off()
+
+tail(posterior)
