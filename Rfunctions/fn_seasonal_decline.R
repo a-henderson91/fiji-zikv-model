@@ -27,11 +27,12 @@ seasonal_f <- function(time, date0=0, amp=0, mid=pi*(3/4)){
 #' @export
 #' @examples 
 
-intro_f <- function(time,mid,width,base){
-  xx <- 1 - (4*base)*exp(-(time-mid)/width)/(1+exp(-(time-mid)/width))^2
-  if(is.nan(xx)){xx <- 1}
-  xx
+intro_f <- function(time, mid = 0, width = 2, base = 2){
+ xx <- (4*base)*exp(-(time-mid)/width)/(1+exp(-(time-mid)/width))^2
+ xx[is.nan(xx)] <- 0
+ xx
 }
+#integrate(intro_f,-Inf, Inf)
 
 #' Flexible decline function transmission rate function
 #' 
@@ -46,12 +47,8 @@ intro_f <- function(time,mid,width,base){
 #' @export
 #' @examples 
 #' 
-control_f <- function(time,mask=0,base=1,grad=.1,mid=0, mid2=1, width=30){
-  c1 <- 1 - (4*base)*exp(-(time-mid)/width)/(1+exp(-(time-mid)/width))^2
-  c1 <- c1*(time<mid)
-  c2 <- 1-(base)*(1-1/(1+exp(-grad*(time-mid2))))
-  c2 <- c2*(time>=mid)
-  c1+c2
+control_f <- function(time, base = 1, mid = 0, width = 10){
+  1 - (4*base)*exp(-(time-mid)/width)/(1+exp(-(time-mid)/width))^2
 }
 
 #' Reporting cases function
@@ -74,5 +71,6 @@ ReportC<-function(cases, rep, repvol){
 #' @param x number to test
 #' @param x0 value to be greater than
 #' @export
+
 
 extinct <- function(x,x0){as.numeric(x>=x0)} 

@@ -6,7 +6,7 @@
 #' @param time.vals.sim List of time values to simulate over
 #' @export
 
-simulate_deterministic_noage_DENVimm <- function(theta, init.state, time.vals.sim) {
+zikv_model_ode <- function(theta, init.state, time.vals.sim) {
   SIR_ode <- function(time, state, theta) {
     ## extract parameters from theta
     Nsize <-   theta[["npop"]]
@@ -19,7 +19,7 @@ simulate_deterministic_noage_DENVimm <- function(theta, init.state, time.vals.si
       gamma_d <- theta[['gamma_d']]
       beta_h1 <- theta[['beta_h']]*
         seasonal_f(time, date0=theta[["shift_date"]],amp=theta[["beta_v_amp"]],mid=theta[["beta_v_mid"]])*
-        control_f(time, base=theta[["beta_base"]], grad=theta[["beta_grad"]], mid=theta[["beta_mid"]], mid2=theta[["beta_mid"]]+theta[["beta_width"]], width=theta[["beta_width"]]) 
+        control_f(time, base=theta[["beta_base"]], mid=theta[["beta_mid"]], width=theta[["beta_width"]]) 
       beta_v1 <- beta_h1*theta[['beta_v']]
       delta_v  <- theta[["MuV"]] 
       alpha_v <-  theta[["Vex"]]
@@ -53,8 +53,8 @@ simulate_deterministic_noage_DENVimm <- function(theta, init.state, time.vals.si
       Idpos = extinct(Id,1) # Need at least one infective
       
       # Introduction of ZIKV infections
-      intro_zikv    = 1-intro_f(time, mid = theta[["zika_start_point"]], width = theta[["intro_width"]], base = theta[["intro_base"]]) 
-      initDenv = 1-intro_f(time, mid = theta[["denv_start_point"]], width = 0.25, base = 160) ## fixed so that approx ~160 introduction happen on 2013-10-27
+      intro_zikv <- intro_f(time, mid = theta[["zika_start_point"]], width = theta[["intro_width"]], base = theta[["intro_base"]]) 
+      initDenv <- intro_f(time, mid = theta[["denv_start_point"]], width = 0.25, base = 160) ## fixed so that approx ~160 introduction happen on 2013-10-27
       
       # Human population
       dS  =  - S*(lambda_h*IM)*Ipos - chi*Sd*(beta_d*Id/Nsize) + chi*(2*omega_d*T2d) 

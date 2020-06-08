@@ -45,7 +45,7 @@ if(!is.na(theta[['chi']])){
   theta[["chi"]] <- theta[['chi']]}else{
     theta[["chi"]] <- 0}
 # Run simulation ----------------------------------------------------------
-output <- simulate_deterministic_noage_DENVimm(theta, init1, time.vals.sim=time.vals)
+output <- zikv_model_ode(theta, init1, time.vals.sim=time.vals)
 
 # Match compartment states at sim.vals time
 S_traj <- output[match(time.vals,output$time),"s_init"]
@@ -73,7 +73,7 @@ date0 = (model_st-date.vals[1]) %>% as.numeric()
 
 beta_ii <- seasonal_f(time.V[1:tMax], date0, amp=theta[["beta_v_amp"]], mid=theta[["beta_v_mid"]])
 #decline_ii <- decline_f(time.V[1:tMax], mid=theta[["beta_mid"]], width=theta[["beta_grad"]], base=theta[["beta_base"]])
-decline_ii <- control_f(time.V[1:tMax], base=theta[["beta_base"]], grad=theta[["beta_grad"]], mid=theta[["beta_mid"]], mid2=theta[["beta_mid"]]+theta[["beta_width"]], width=theta[["beta_width"]])
+decline_ii <- control_f(time.V[1:tMax], base=theta[["beta_base"]], mid=theta[["beta_mid"]], width=theta[["beta_width"]])
 b_vary = beta_ii#*decline_ii
 
 s_pick = S_traj[1:tMax]/342000
@@ -122,7 +122,7 @@ plot(date.vals, casecount, type='l', col=2, xlab="Year", ylab="Infections (cases
 lines(date.vals,casecountD)
 par(new=T)
 plot(date.vals, y.vals, type='h', col=4, yaxt='n', xaxt='n', xlab="", ylab="", ylim=c(0,5))
-lines(date.vals,sapply(time.vals, function(xx){1-intro_f(xx, mid = theta[["zika_start_point"]], width = theta[["intro_width"]], base = theta[["intro_base"]])}),
+lines(date.vals,sapply(time.vals, function(xx){intro_f(xx, mid = theta[["zika_start_point"]], width = theta[["intro_width"]], base = theta[["intro_base"]])}),
       type='l',col=alpha(9,0.4), yaxt='n', xaxt='n', xlab="", ylab="")
 axis(side=4)
 mtext("Introductions", side=4, cex = 0.7, padj=3)
@@ -137,3 +137,5 @@ axis(side=4)
 
 return(likelihood)
 }
+
+zika_single_sim(0.33)

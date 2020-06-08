@@ -38,7 +38,7 @@ Deterministic_modelR_final_DENVimmmunity <- function(theta, theta_init, location
         theta[["chi"]] <- 0}
 
     # Output simulation data
-    output <- simulate_deterministic_noage_DENVimm(theta, init1, time.vals.sim)
+    output <- zikv_model_ode(theta, init1, time.vals.sim)
     
     # Match compartment states at sim.vals time
     S_traj <- output[match(time.vals.sim,output$time),"s_init"]

@@ -12,7 +12,6 @@ sapply(here::here("Rfunctions", r_functions), source, .GlobalEnv)
 data <- load.data.multistart(Virus = "ZIKV", startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0) #virusTab[iiH], dataTab[iiH])
 
 # Load and store denv2014 posteriors -----------------------------------------------
-labelN=1
 labelN <- 1
 iiH <- 2
 load_posterior_1 <- load.posteriors(load.run.name=model1_name, file.path="posterior_denv2014fit", iiH, mcmc.burn=mcmc.burn)
@@ -96,14 +95,13 @@ if(include.2014.control == T){
 
 ## Plot "control function" with initial starting values
 control_plot_vals <- as.data.frame(t(thetaAlltab[1,iiH,]))
-control_plot <- sapply(time.vals, function(xx){control_f(xx, 
-                                         base=control_plot_vals$beta_base,
-                                         grad=control_plot_vals$beta_grad,
-                                         mid=control_plot_vals$beta_mid,
-                                         mid2=control_plot_vals$beta_mid+control_plot_vals$beta_width,
-                                         width=control_plot_vals$beta_width
+control_plot <- sapply(1:max(time.vals), function(xx){control_f(xx, 
+                                         base = control_plot_vals$beta_base,
+                                         mid = control_plot_vals$beta_mid,
+                                         width = control_plot_vals$beta_width
                                          )})
-plot(date.vals[30:100], control_plot[30:100], type="l", ylim=c(0,1), bty="n", ylab="Relative R0", xlab="Date", xaxt="n")
+#plot(date.vals[30:100], control_plot[30:100], type="l", ylim=c(0,1), bty="n", ylab="Relative transmission", xlab="Date", xaxt="n")
+plot(startdate+(1:max(time.vals))[340:(340+180)], control_plot[340:(340+180)], type="l", ylim=c(0,1), bty="n", ylab="Relative transmission", xlab="Date", xaxt="n")
 axis.Date(side=1, at=seq.Date(date.vals[30], date.vals[100], by = "1 months"), "months", format = "%b%y")
 
 dev.copy(pdf, here::here("output/fig_supp_controlFn.pdf"), 6,4)
@@ -122,13 +120,14 @@ if(zika_single_sim(initial_beta_h)==-Inf){
 
 ## Plot "introduction function" with initial starting values
 intro_plot_vals <- as.data.frame(t(thetaAlltab[1,iiH,]))
-intro_plot <- sapply(time.vals, function(xx){1-intro_f(xx, 
+intro_plot <- sapply(time.vals, function(xx){intro_f(xx, 
                                                          mid=control_plot_vals$beta_mid,
                                                          width=control_plot_vals$beta_width,
                                                          base=control_plot_vals$intro_base
 )})
 plot(date.vals[20:90], intro_plot[20:90], type="l", ylim=c(0,1), bty="n", ylab="ZIKV introductions", xlab="Date", xaxt="n")
 axis.Date(side=1, at=seq.Date(date.vals[20], date.vals[90], by = "1 months"), "months", format = "%b%y")
+integrate(intro_f, -Inf, Inf)
 
 dev.copy(pdf, here::here("output/fig_supp_introFn.pdf"), 6,4)
   dev.off()
