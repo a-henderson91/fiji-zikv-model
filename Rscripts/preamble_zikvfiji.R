@@ -28,7 +28,7 @@ seasonal.transmission   <- T # whether to estimate seasonal transmission or not.
 include.sero.likelihood <- T # whether to include serological data in likelihood
 vector.control          <- T # whether to reduce transmission in March2014 when vector control campaign was in effect 
 include.2014.control    <- T # if False then beta_base set to 0
-run.name <- "0308_github" 
+run.name <- "0820-2014acceptanceStep" 
 model1_name <- "0219_model1_denv3"
   
 ## MCMC parameters 
@@ -67,10 +67,10 @@ print(paste0("Name of run = ", run.name))
 
 # colours for plots -------------------------------------------------------
 datacol=rgb(0.4,0.4,0.4)
-col2=rgb(0.8,0,0.5,0.8)
-col2a=rgb(0.8,0,0.5,0.4)
 col1=rgb(0,0.3,1,0.8)
 col1a=rgb(0,0.3,1,0.4)
+col2=rgb(0.8,0,0.5,0.8)
+col2a=rgb(0.8,0,0.5,0.4)
 
 col3=rgb(0.4,0.4,0.4,0.8)
 col3a=rgb(0.4,0.4,0.4,0.4)
@@ -87,21 +87,21 @@ col7=rgb(0.02,0.3,0.02,0.8)
 col7a=rgb(0.02,0.3,0.02,0.4)
 
 
-col1 <- "#3880bf"
-col2 <- "#ef286e"
-col3 <- "#c06b74"
-col4 <- "#3eeaef"
-col5 <- "#881448"
-col6 <- "#0ba47e"
-col7 <- "#1e5c4a"
-
-col1a <- alpha("#3880bf" ,0.4)
-col2a <- alpha("#ef286e" ,0.4)
-col3a <- alpha("#c06b74" ,0.4)
-col4a <- alpha("#3eeaef" ,0.4)
-col5a <- alpha("#881448" ,0.4)
-col6a <- alpha("#0ba47e" ,0.4)
-col7a <- alpha("#1e5c4a" ,0.4)
+#col1 <- "#3880bf"
+#col2 <- "#ef286e"
+#col3 <- "#c06b74"
+#col4 <- "#3eeaef"
+#col5 <- "#881448"
+#col6 <- "#0ba47e"
+#col7 <- "#1e5c4a"
+#
+#col1a <- alpha("#3880bf" ,0.4)
+#col2a <- alpha("#ef286e" ,0.4)
+#col3a <- alpha("#c06b74" ,0.4)
+#col4a <- alpha("#3eeaef" ,0.4)
+#col5a <- alpha("#881448" ,0.4)
+#col6a <- alpha("#0ba47e" ,0.4)
+#col7a <- alpha("#1e5c4a" ,0.4)
 
 theme_zika_fiji <- function(){
   theme(title = element_text(size = 12, face = "bold"),
