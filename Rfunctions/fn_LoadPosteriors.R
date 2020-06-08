@@ -35,7 +35,9 @@ for(iiM in 1:m.tot){
   theta_inittabA=rbind(theta_inittabA,theta_inittab[picks,])
   
   c_trace_tab0 = rbind(c_trace_tab0,c_trace_tab[picks,iiH,])
-  cd_trace_tab0 = rbind(cd_trace_tab0,cd_trace_tab[picks,iiH,])
+  if(!is.null(cd_trace_tab0)){
+    cd_trace_tab0 = rbind(cd_trace_tab0,cd_trace_tab[picks,iiH,])
+  }
   s_trace_tab0 = rbind(s_trace_tab0,s_trace_tab[picks,iiH,])
   r_trace_tab0 = rbind(r_trace_tab0,r_trace_tab[picks,iiH,])
   x_trace_tab0 = rbind(x_trace_tab0,x_trace_tab[picks,iiH,])
