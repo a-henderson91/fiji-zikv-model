@@ -147,7 +147,7 @@ for(ii in 1:btsp){
   cvector[ii,]=ReportC(c_trace_tab[pick,1:tMax],thetatab[pick,'rep'],thetatab[pick,'repvol'])
   ivector[ii,]=c_trace_tab[pick,1:tMax]
   rvector[ii,]=(r_trace_tab[pick,1:tMax]/thetatab[pick,]$npop) + ((1- (r_trace_tab[pick,1:tMax]/thetatab[pick,]$npop))*epsilon)
-  introvector[ii,]=sapply(time.vals[1:tMax], function(xx){1-intro_f(xx, mid = thetatab[pick,'intro_mid'], width = thetatab[pick,'intro_width'], base = thetatab[pick,'intro_base'])})
+  introvector[ii,]=sapply(time.vals[1:tMax], function(xx){intro_f(xx, mid = thetatab[pick,'intro_mid'], width = thetatab[pick,'intro_width'], base = thetatab[pick,'intro_base'])})
   if(length(cd_trace_tab)!=0){ ## if cd_trace_tab has been exported from main model run
     cvectorDENV[ii,]=ReportC(cd_trace_tab[pick,1:tMax], 0.12, 0.57)
   }
@@ -276,7 +276,7 @@ for(ii in 1:length(btstrap)){
   date0 <- (startdate-date.vals[1]) %>% as.numeric() 
   
   beta_ii <- seasonal_f(time.V[1:tMax], date0, amp=thetatab[b_ii,'beta_v_amp'], mid=thetatab[b_ii,'beta_v_mid'])
-  decline_ii <- control_f(time.V[1:tMax], base=thetatab[b_ii, "beta_base"], grad=thetatab[b_ii,"beta_mid"], mid=thetatab[b_ii,"beta_mid"], mid2=thetatab[b_ii,"beta_mid"]+thetatab[b_ii,"beta_width"], width=thetatab[b_ii,"beta_width"])
+  decline_ii <- control_f(time.V[1:tMax], base=thetatab[b_ii, "beta_base"], mid=thetatab[b_ii,"beta_mid"], width=thetatab[b_ii,"beta_width"])
   b_vary <- beta_ii
   
   s_pick <- s_trace_tab[b_ii,1:tMax]/thetatab$npop[b_ii] 
@@ -439,7 +439,7 @@ for(ii in 1:sims){
   mtext("Infections", side=2, line=2, col = col1)
   text(as.Date("2016-01-01"),ylimmax*(7/8), paste("Attack Rate","=",signif(sum(short_infections_series[,ii])/thetaMax[["npop"]],2)))
   par(new=T)
-  intros_series <- sapply(short_infections_series$time_vals, function(xx){1-intro_f(xx, mid = intros[ii], width = thetaMax[["intro_width"]], base = thetaMax[["intro_base"]])})
+  intros_series <- sapply(short_infections_series$time_vals, function(xx){intro_f(xx, mid = intros[ii], width = thetaMax[["intro_width"]], base = thetaMax[["intro_base"]])})
   plot(short_infections_series$date_vals, intros_series, type="l", yaxt="n", ylab="", xaxt="n", xlab="", col = col2, ylim=c(0,4), lty=2, bty="n", lwd = 1.25)
   axis.Date(side=1, at=seq.Date(min(plot_date_series), max(plot_date_series)+180, by = "6 months"), "months", format = "%b %Y")
   axis(side=4)
