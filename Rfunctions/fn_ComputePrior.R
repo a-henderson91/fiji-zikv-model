@@ -31,7 +31,6 @@ ComputePrior <- function(iiH, thetaAlltab, thetaAllstar, covartheta){
       priorBeta_amp(thetaAllstar["beta_v_amp"])*
       priorBeta_mid(thetaAllstar["beta_v_mid"])
   }
-
   # Compute prior of current parameter set theta
   p_theta = priorInf(1/thetaAlltab["Inf"])*
             priorExp(1/thetaAlltab["Exp"])*

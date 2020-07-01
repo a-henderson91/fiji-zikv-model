@@ -29,7 +29,7 @@ sapply(all_files, function(xx){source(here::here("Rfunctions/", xx))})
 # import posteriors -------------------------------------------------------
 labelN <- 1
 m.tot <- length(list.files(path = here::here(post_file_path), pattern = paste0("*", run.name)))
-load_posterior_1 <- load.posteriors(load.run.name=run.name, file.path=post_file_path, iiH, mcmc.burn=mcmc.burn)
+load_posterior_1 <- load.posteriors(load.run.name=run.name, file.path=post_file_path, iiH, mcmc.burn = mcmc.burn)
   list2env(load_posterior_1,globalenv())
 
 # load data --------------------------------------------------------------
@@ -201,6 +201,7 @@ axis.Date(1, at=seq(min(plot_fig2A$dates), max(plot_fig2A$dates), by="years"),
 lines(plot_fig2A$dates,plot_fig2A$medP, col=col1, lty=2)
 polygon(c(plot_fig2A$dates, rev(plot_fig2A$dates)),
         c(plot_fig2A$ciP1, rev(plot_fig2A$ciP2)), col=col1a, lty=0)
+
 if(virusTab[1]=="DEN3"){
 axis(side=2,  bty='l', col.ticks = col1a, col=col1, col.axis=col1, col.lab=col1a)
 mtext("Dengue-3 cases", side=2, line=2, col=col1, cex=1)
@@ -340,7 +341,7 @@ grid(NA,NULL, lty = 1, col = colgrid)
 mtext("C",side=3, adj=0, font=2)
 
 # Fig 2 - save ------------------------------------------------------------
-dev.copy(pdf, "output/fig2_modelOutputs_wide.pdf", 7, 5)
+dev.copy(pdf, "output/fig2_modelOutputs_wide3.pdf", 7, 5)
   dev.off()
 
 # Figure 3 - introduction dynamics ----------------------------------------
@@ -596,7 +597,7 @@ effective.param = var(-2*sim_likOut)/2
 dic.calc = deviance.at.post.mean + effective.param
 
 
-param1=cbind(
+param1 <- cbind(
   c.text(r0_post,3),
   c.text(rr_post,3),
   c.text(beta_h1[picks],2),

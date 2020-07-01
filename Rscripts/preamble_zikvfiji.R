@@ -28,11 +28,11 @@ seasonal.transmission   <- T # whether to estimate seasonal transmission or not.
 include.sero.likelihood <- T # whether to include serological data in likelihood
 vector.control          <- T # whether to reduce transmission in March2014 when vector control campaign was in effect 
 include.2014.control    <- T # if False then beta_base set to 0
-run.name <- "0820-2014acceptanceStep" 
+run.name <- "0611-13intro" 
 model1_name <- "0219_model1_denv3"
   
 ## MCMC parameters 
-MCMC.runs <- 2e5 #number of MCMC iterations 
+MCMC.runs <- 10000 #number of MCMC iterations 
 thinning.parameter <- 1
 multichain <- c(1:3)  # n chains to run in parallel
 mcmc.burn <- 0.4
@@ -104,15 +104,21 @@ col7a=rgb(0.02,0.3,0.02,0.4)
 #col7a <- alpha("#1e5c4a" ,0.4)
 
 theme_zika_fiji <- function(){
-  theme(title = element_text(size = 12, face = "bold"),
+  theme(plot.title = element_text(size = 12, hjust=0),
+        axis.title = element_text(colour = rgb(0,0,0,0.8)), 
         panel.background = element_rect(fill = "white",
                                         colour = "white",
                                         size = 0.5, linetype = "solid"),
+        axis.line = element_line(size=rel(0.5), colour = rgb(0,0,0,0.8)),
         panel.grid.major = element_blank(),
         panel.grid.minor.x = element_blank(),
-        panel.grid.major.y = element_line(size=.1, color=rgb(0,0,0,0.3) ) ,
-        axis.ticks = element_blank(),
-        line = element_line(colour = "gray70"),
-        rect = element_rect(colour = "black", fill = "white")
+        panel.grid.minor.y = element_line(size=.2, color=rgb(0,0,0,0.2)) ,
+        panel.grid.major.y = element_line(size=.2, color=rgb(0,0,0,0.3)) ,
+        axis.ticks = element_line(size=.1, color=rgb(0,0,0,0.4)),
+        strip.background = element_rect(fill = "white"),
+        strip.text = element_text(size = rel(0.75), hjust = 0),
+        ##line = element_line(colour = "gray70"),
+        ##rect = element_rect(fill = "white"),
+        legend.background = element_blank(), legend.key = element_blank()
   )
 }

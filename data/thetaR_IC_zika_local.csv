@@ -20,7 +20,7 @@ chi,NA,0.3,NA,NA,0
 omega_d,NA,30,NA,NA,60
 epsilon,NA,0.001,0.067,0.067,0.067
 rho,NA,400,400,400,400
-intro_mid,0,300,,,
+intro_mid,0,100,,,
 intro_base,0,1,,,
 intro_width,0,10,,,
 tau,1,1,,,
