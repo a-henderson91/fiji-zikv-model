@@ -28,7 +28,7 @@ seasonal_f <- function(time, date0=0, amp=0, mid=pi*(3/4)){
 #' @examples 
 
 intro_f <- function(time, mid = 0, width = 2, base = 2){
- xx <- (4*base)*exp(-(time-mid)/width)/(1+exp(-(time-mid)/width))^2
+ xx <- (base)*exp(-(time-mid)/width)/(1+exp(-(time-mid)/width))^2
  xx[is.nan(xx)] <- 0
  xx
 }

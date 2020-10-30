@@ -5,30 +5,42 @@
 # - - - - - - - - - - - - - - - - - - - - - - - 
 
 # Load packages and set up pathogen -----------------------------------------------
-library(coda)
-library(colorspace)
-library(doMC)
-clust1<-registerDoMC(4)  #change to your number of CPU cores
-library(data.table)
-library(deSolve)
-library(foreach)
-library(ggplot2)
-library(gridExtra)
-library(lubridate)
-library(magrittr)
-library(MASS)
-library(mvtnorm)
-library(tidyverse)
-library(truncnorm)
-
+#library(coda)
+#library(colorspace)
+#library(doMC)
+#library(data.table)
+#library(deSolve)
+#library(foreach)
+#library(ggplot2)
+#library(gridExtra)
+#library(lubridate)
+#library(magrittr)
+#library(MASS)
+#library(mvtnorm)
+#library(tidyverse)
+#library(truncnorm)
+pacman::p_load(coda,
+               colorspace,
+               doMC,
+               data.table,
+               deSolve,
+               foreach,
+               ggplot2,
+               gridExtra,
+               lubridate,
+               magrittr,
+               MASS,
+               mvtnorm,
+               tidyverse,
+               truncnorm)
 library(here)
-
+clust1 <- registerDoMC(4)  #change to your number of CPU cores
 # model run options to change ---------------------------------------------
 seasonal.transmission   <- T # whether to estimate seasonal transmission or not. If false - zeroes BETA_V_AMP after estimation in main script
 include.sero.likelihood <- T # whether to include serological data in likelihood
 vector.control          <- T # whether to reduce transmission in March2014 when vector control campaign was in effect 
 include.2014.control    <- T # if False then beta_base set to 0
-run.name <- "0611-13intro" 
+run.name <- "0820-2014acceptanceStep" 
 model1_name <- "0219_model1_denv3"
   
 ## MCMC parameters 
@@ -47,7 +59,6 @@ init.conditions.excel <- "thetaR_IC_zika"
 locnn <- 2 ## needs to be >1 to set up results matrix not vector
 itertab <- c(1:locnn)
 itertabM=c(1:1) # Iterate over locations in set up and MCMC
-
 
 # model parameters --------------------------------------------------------
 startdate <- as.Date("2013-01-01")  ## shouldn't be changed (some parameters are relative to this date)

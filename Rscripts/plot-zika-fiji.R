@@ -375,6 +375,7 @@ zika_single_sim <- function(intro_t, intro_num, thetaset, tV){
   thetaA_star[["beta_base"]] <- control_measures
   thetaA_star[["intro_base"]] <- intro_num
   thetaA_star[["intro_width"]] <- introductions_width
+  
   theta <- c("npop"=342000, thetaA_star)
   
   # initial conditions
@@ -388,7 +389,7 @@ zika_single_sim <- function(intro_t, intro_num, thetaset, tV){
   theta[["zika_start_point"]] <- intro_t
   
   ## Run simulation
-  output <- simulate_deterministic_noage_DENVimm(theta, init1, time.vals.sim=tV)
+  output <- zikv_model_ode(theta, init1, time.vals.sim=tV)
   cases1 <- output[match(tV,output$time),"c_init"]
   casecount <- cases1-c(0,cases1[1:(length(tV)-1)])
   casecount[casecount<0] <- 0
@@ -427,7 +428,7 @@ short_infections_series <- infections_series %>%
 seasonal_wave <- sapply(short_infections_series$time_vals, function(xx){seasonal_f(xx, amp = thetaMax[["beta_v_amp"]], mid=thetaMax[["beta_v_mid"]])})
 
 sims <- dim(short_infections_series)[2]-2
-pdf(here::here("output/fig3_simulations.pdf"), width = 8, height = 6)
+#pdf(here::here("output/fig3_simulations.pdf"), width = 8, height = 6)
 par(mfcol=c(sims, 1), mar=c(2,4,1,4)+0.1)
 ylimmax <- short_infections_series %>% pivot_longer(cols=starts_with("2")) %>% summarise(max(value)) %>% pull()
 ylimits <- c(0, round(ylimmax*1.1,0))
