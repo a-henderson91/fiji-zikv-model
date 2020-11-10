@@ -28,8 +28,8 @@ priorRec0  <- function(x){dbinom(round(x*nPOP[1]), size=nPOP[1], prob=nLUM[1]/nP
 priorBeta <- function(x){dunif(x, min = 0, max = 1)} 
 priorBetaV <- function(x){dunif(x, min = 0, max = 1e5)} 
 
-#priorIntro <- function(x){dnorm(x, mean=intro_prior_mu, sd=intro_prior_sigma)} ## from 'Export start time Central Division.R'
-priorIntro <- function(x){dunif(x, min=0, max=150)} 
+priorIntro <- function(x){dnorm(x, mean=intro_prior_mu, sd=intro_prior_sigma)} ## from 'Export start time Central Division.R'
+#priorIntro <- function(x){dunif(x, min=0, max=150)} 
 
 priorInitInf <- function(x){dunif(x, min=0, max=6)}
 priorInitWidth <- function(x){dunif(x, min=0, max=50)}

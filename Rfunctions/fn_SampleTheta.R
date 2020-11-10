@@ -28,7 +28,7 @@ SampleTheta<-function(theta_in, theta_init_in, covartheta, covartheta_init, glob
         theta_star[["beta_base"]]=min(theta_star[["beta_base"]],2-theta_star[["beta_base"]]) # Ensure amplitude between zero and 1
       }
       if(sum(names(theta_star)=="intro_mid")>0){
-        theta_star[["intro_mid"]]=max(0, min(theta_star[["intro_mid"]],800))
+        theta_star[["intro_mid"]]=max(0, min(theta_star[["intro_mid"]],900))
       }
 
   ## Initial conditions

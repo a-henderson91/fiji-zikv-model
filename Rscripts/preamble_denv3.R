@@ -31,7 +31,7 @@ include.2014.control    <- T # if False then beta_base set to 0
 run.name <- "01109_model1" 
 
 ## MCMC parameters 
-MCMC.runs <- 2000 #number of MCMC iterations 
+MCMC.runs <- 10000 #number of MCMC iterations 
 thinning.parameter <- 1
 multichain <- c(1:3)  # n chains to run in parallel
 mcmc.burn <- 0.4
