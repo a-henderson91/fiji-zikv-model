@@ -4,7 +4,7 @@
 # github.com/a-henderson91/fiji-zikv-model
 # - - - - - - - - - - - - - - - - - - - - - - - 
 
-virus <- "ZIKV"  # DEN3 or ZIKV
+virus <- "DEN3"  # DEN3 or ZIKV
 
 output_simulations <- F
 output_diagnostics <- T
@@ -31,6 +31,8 @@ labelN <- 1
 m.tot <- length(list.files(path = here::here(post_file_path), pattern = paste0("*", run.name)))
 load_posterior_1 <- load.posteriors(load.run.name=run.name, file.path=post_file_path, iiH, mcmc.burn = mcmc.burn)
   list2env(load_posterior_1,globalenv())
+
+load_DENVfit_1 <- load.posteriors(load.run.name = model1_name, file.path = "posterior_denv2014fit", iiH = 2, mcmc.burn = mcmc.burn)
 
 # load data --------------------------------------------------------------
 data <- load.data.multistart(Virus = virusTab[iiH], startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0) #virusTab[iiH], dataTab[iiH])
@@ -150,10 +152,18 @@ for(ii in 1:btsp){
   ivector[ii,]=c_trace_tab[pick,1:tMax]
   rvector[ii,]=(r_trace_tab[pick,1:tMax]/thetatab[pick,]$npop) + ((1- (r_trace_tab[pick,1:tMax]/thetatab[pick,]$npop))*epsilon)
   introvector[ii,]=sapply(time.vals[1:tMax], function(xx){intro_f(xx, mid = thetatab[pick,'intro_mid'], width = thetatab[pick,'intro_width'], base = thetatab[pick,'intro_base'])})
-  if(length(cd_trace_tab)!=0){ ## if cd_trace_tab has been exported from main model run
-    cvectorDENV[ii,]=ReportC(cd_trace_tab[pick,1:tMax], 0.12, 0.57)
-  }
 }
+
+## plot posterior of cases
+tMaxDenv <- length(load_DENVfit_1$c_trace_tab[1,])
+denvvector <- matrix(NA,nrow=btsp,ncol=tMaxDenv)
+for(ii in 1:btsp){
+  pick <- sample(load_DENVfit_1$picks, 1)
+  denvvector[ii,] <- ReportC(load_DENVfit_1$c_trace_tab[pick,1:tMaxDenv],load_DENVfit_1$thetatab[pick,'rep'],load_DENVfit_1$thetatab[pick,'repvol'])
+}
+medD <- apply(denvvector,2,function(x){median(x, na.rm=T)})
+ciD1 <- apply(denvvector,2,function(x){quantile(x,0.025, na.rm=T)})
+ciD2 <- apply(denvvector,2,function(x){quantile(x,0.975, na.rm=T)})
 
 # Estimated number of cases 
 medP <- apply(cvector,2,function(x){median(x, na.rm=T)})
@@ -177,10 +187,6 @@ ci_inf250 <- apply(ivector,2,function(x){quantile(x,0.75, na.rm=T)})
 med_intro <- apply(introvector,2,function(x){median(x, na.rm=T)})
 ci_intro1 <- apply(introvector,2,function(x){quantile(x,0.025, na.rm=T)})
 ci_intro2 <- apply(introvector,2,function(x){quantile(x,0.975, na.rm=T)})
-# DENV posteriors
-med_denv <- apply(cvectorDENV,2,function(x){median(x, na.rm=T)})
-ci_denv1 <- apply(cvectorDENV,2,function(x){quantile(x,0.025, na.rm=T)})
-ci_denv2 <- apply(cvectorDENV,2,function(x){quantile(x,0.975, na.rm=T)})
 
 # Fig 2A - infections and cases ---------------------------------------------
 par(mfrow=c(3,1))
@@ -190,7 +196,9 @@ y.vals.plot <- y.vals[1:tMax]
 y.vals.plot[y.vals.plot==0] <- NA
 dataframe.p1 <- data.table(date.vals=date.vals, y.vals.plot, medP, ciP1, ciP2, ciP150, ciP250, 
                            medP_R, ciP1_R, ciP2_R, ciR150, ciR250,
-                           med_denv, ci_denv1, ci_denv2)
+                           medD = c(medD, rep(NA, tMax+1-tMaxDenv)), 
+                           ciD1 = c(ciD1, rep(NA, tMax+1-tMaxDenv)), 
+                           ciD2 = c(ciD2, rep(NA, tMax+1-tMaxDenv)))
 plot_fig2A <- DFdenv[dataframe.p1, on=.(dates = date.vals), roll=-Inf]
 
 ylims <- c(0, max(plot_fig2A$ciP2)*1.1)
@@ -215,6 +223,11 @@ mtext("Zika cases", side=4, line=2, col=col1)
   plot(plot_fig2A$dates, plot_fig2A$denv.cases, col=0, cex=0.8, pch=16, type='l',
        xaxt="n",yaxt="n",xlab="",ylab="",frame.plot=F)
   lines(plot_fig2A$dates, plot_fig2A$denv.cases, col=col4, cex=0.8, lwd = 2)
+  lines(plot_fig2A$dates, plot_fig2A$medD, col=col4, cex=0.8, lwd = 2, lty = 2)
+  polygon(c(plot_fig2A$dates, rev(plot_fig2A$dates)),
+          c(plot_fig2A$ciD1, rev(plot_fig2A$ciD2)), lty=0, col=col4a)
+  mtext(LETTERS[1],side=3, adj=0, font=2)
+  
   axis(2, bty='l', col.ticks = col4a, col=col4, col.axis=col4, col.lab=col4a)
   mtext("Dengue cases", side=2, line=2, col=col4) # Label for 2nd axis
     grid(NA,NULL, lty = 1, col = colgrid) 
