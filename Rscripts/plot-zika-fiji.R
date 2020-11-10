@@ -21,6 +21,7 @@ if(virus=="ZIKV"){
   post_file_path <- "posterior_denv2014fit"
 }
 source(here::here("Rscripts", preamblecode))
+if(virus == "DEN3"){model1_name <- run.name}
 
 # load vectorbornefit code ------------------------------------------------
 all_files <- list.files(here::here("Rfunctions"))
@@ -37,7 +38,7 @@ load_DENVfit_1 <- load.posteriors(load.run.name = model1_name, file.path = "post
 # load data --------------------------------------------------------------
 data <- load.data.multistart(Virus = virusTab[iiH], startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0) #virusTab[iiH], dataTab[iiH])
   list2env(data,globalenv())
-
+  
 # load BEAST tmrca posterior - from "Export start time Central Division.R"
 load("beast/fj-c-tmrca.RData")
 tmrcaBEAST <- fj.C.tmrca.date
@@ -153,7 +154,6 @@ for(ii in 1:btsp){
   rvector[ii,]=(r_trace_tab[pick,1:tMax]/thetatab[pick,]$npop) + ((1- (r_trace_tab[pick,1:tMax]/thetatab[pick,]$npop))*epsilon)
   introvector[ii,]=sapply(time.vals[1:tMax], function(xx){intro_f(xx, mid = thetatab[pick,'intro_mid'], width = thetatab[pick,'intro_width'], base = thetatab[pick,'intro_base'])})
 }
-
 ## plot posterior of cases
 tMaxDenv <- length(load_DENVfit_1$c_trace_tab[1,])
 denvvector <- matrix(NA,nrow=btsp,ncol=tMaxDenv)
@@ -201,9 +201,10 @@ dataframe.p1 <- data.table(date.vals=date.vals, y.vals.plot, medP, ciP1, ciP2, c
                            ciD2 = c(ciD2, rep(NA, tMax+1-tMaxDenv)))
 plot_fig2A <- DFdenv[dataframe.p1, on=.(dates = date.vals), roll=-Inf]
 
+if(virus == "ZIKV"){tt = "h"}else{tt = "l"}
 ylims <- c(0, max(plot_fig2A$ciP2)*1.1)
 plot(plot_fig2A$dates, plot_fig2A$y.vals.plot, col=col1, cex=0.8, pch=16, bty='n',
-     ylim=ylims, type='h', lwd=2,
+     ylim=ylims, type = tt, lwd=2,
      xlab="Date", ylab="", yaxt='n',
      xaxt="n")
 axis.Date(1, at=seq(min(plot_fig2A$dates), max(plot_fig2A$dates), by="years"), 
@@ -212,26 +213,26 @@ lines(plot_fig2A$dates,plot_fig2A$medP, col=col1, lty=2)
 polygon(c(plot_fig2A$dates, rev(plot_fig2A$dates)),
         c(plot_fig2A$ciP1, rev(plot_fig2A$ciP2)), col=col1a, lty=0)
 
-if(virusTab[1]=="DEN3"){
-axis(side=2,  bty='l', col.ticks = col1a, col=col1, col.axis=col1, col.lab=col1a)
-mtext("Dengue-3 cases", side=2, line=2, col=col1, cex=1)
-grid(NA,NULL, lty = 1, col = colgrid) 
-}else if(virusTab[1]=="ZIKV"){
-axis(side=4,  bty='l', col.ticks = col1a, col=col1, col.axis=col1, col.lab=col1a)
-mtext("Zika cases", side=4, line=2, col=col1)
-  par(new=T)
-  plot(plot_fig2A$dates, plot_fig2A$denv.cases, col=0, cex=0.8, pch=16, type='l',
-       xaxt="n",yaxt="n",xlab="",ylab="",frame.plot=F)
-  lines(plot_fig2A$dates, plot_fig2A$denv.cases, col=col4, cex=0.8, lwd = 2)
-  lines(plot_fig2A$dates, plot_fig2A$medD, col=col4, cex=0.8, lwd = 2, lty = 2)
-  polygon(c(plot_fig2A$dates, rev(plot_fig2A$dates)),
-          c(plot_fig2A$ciD1, rev(plot_fig2A$ciD2)), lty=0, col=col4a)
-  mtext(LETTERS[1],side=3, adj=0, font=2)
-  
-  axis(2, bty='l', col.ticks = col4a, col=col4, col.axis=col4, col.lab=col4a)
-  mtext("Dengue cases", side=2, line=2, col=col4) # Label for 2nd axis
+  if(virus == "DEN3"){
+    axis(side=2,  bty='l', col.ticks = col1a, col=col1, col.axis=col1, col.lab=col1a)
+    mtext("Dengue-3 cases", side=2, line=2, col=col1, cex=1)
     grid(NA,NULL, lty = 1, col = colgrid) 
-}
+  }else if(virus == "ZIKV"){
+    axis(side=4,  bty='l', col.ticks = col1a, col=col1, col.axis=col1, col.lab=col1a)
+    mtext("Zika cases", side=4, line=2, col=col1)
+    par(new=T)
+    plot(plot_fig2A$dates, plot_fig2A$denv.cases, col=0, cex=0.8, pch=16, type='l',
+         xaxt="n",yaxt="n",xlab="",ylab="",frame.plot=F)
+    lines(plot_fig2A$dates, plot_fig2A$denv.cases, col=col4, cex=0.8, lwd = 2)
+    lines(plot_fig2A$dates, plot_fig2A$medD, col=col4, cex=0.8, lwd = 2, lty = 2)
+    polygon(c(plot_fig2A$dates, rev(plot_fig2A$dates)),
+            c(plot_fig2A$ciD1, rev(plot_fig2A$ciD2)), lty=0, col=col4a)
+    mtext(LETTERS[1],side=3, adj=0, font=2)
+    
+    axis(2, bty='l', col.ticks = col4a, col=col4, col.axis=col4, col.lab=col4a)
+    mtext("Dengue cases", side=2, line=2, col=col4) # Label for 2nd axis
+      grid(NA,NULL, lty = 1, col = colgrid) 
+  }
 mtext("A",side=3, adj=0, font=2)
 
 # Fig 2B - serology and intro dynamics ---------------------------------------------
@@ -500,7 +501,7 @@ if(output_diagnostics==T){
   names(parameters_names) <- parameters_to_estimate
   
   height_plot <- length(parameters_to_estimate)
-  par(mfrow=c(round(height_plot/2),4), mar  = c(2,3,1,3))
+  par(mfrow=c(ceiling(height_plot/2),4), mar  = c(2,3,1,3))
   ## function to split thetatab into chains and plot together
   plot_trace <- function(param){
     chain_length <- length(thetatab$npop)/m.tot

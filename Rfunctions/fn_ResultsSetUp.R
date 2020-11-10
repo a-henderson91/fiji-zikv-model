@@ -73,7 +73,7 @@ compartments_to_est <- parameters_est$compartments_est
 nparam <- length(theta) 
 npc <- rep(0,nparam)
 npc[match(parms_to_est,names(theta))] <- 1
-if(npc == 0){
+if(length(npc) == 1){
   cov_matrix_theta0 <- matrix(0)
 }else{
   cov_matrix_theta0 <- diag(npc)
