@@ -42,8 +42,8 @@ tmrcaBEAST <- fj.C.tmrca.date
 
 # Fig 1A - introduction time histogram ------------------------------------
 tmrca <- cbind.data.frame(startdate + thetatab$intro_mid, c(startdate + tmrcaBEAST[1:length(thetatab$intro_mid)]))
-names(tmrca) <- c("posterior","prior")
-tmrca <- gather(tmrca, data_type, density)
+  names(tmrca) <- c("posterior","prior")
+  tmrca <- gather(tmrca, data_type, density)
 
 ggplot(data=tmrca, aes(colour=data_type, fill=data_type)) +
   geom_histogram(aes(density), bins = 60) +
@@ -66,8 +66,8 @@ dev.copy(pdf, paste0("output/fig1A_introHist_",virus,".pdf"), 8, 6)
 #  #denv <- load.data.multistart(startdate=as.Date("2013-10-27"), add.nulls=0,  "DEN3", "Central_2014_timeseries", "Fiji_serology_APR19", "thetaR_IC_zika_denvlike")
 #
 denv_data <- load.data.multistart(Virus = "DEN3", startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0) #virusTab[iiH], dataTab[iiH])
-denv.cases <- denv_data$y.vals
-denv.dates <- denv_data$date.vals
+  denv.cases <- denv_data$y.vals
+  denv.dates <- denv_data$date.vals
 ## load denv posteriors
 #load("data_sets/theta_denv_posteriors.RData")
 #d_trace_tab <- DENV.mcmc.run$c_trace_tab[,1,]
@@ -109,11 +109,13 @@ hist(c(startdate + tmrcaBEAST[1:length(thetatab$intro_mid)]), breaks = 1000, col
      freq=F,
      xlim=c(as.Date("2013-01-08"), as.Date("2018-01-01")))
 par(new=T)
-plot(case.data$dates, case.data$y.vals, col=col1, lwd=cexplot, pch=16, bty='n',ylim=c(0,10),type=tt, 
-     xlab="Date", ylab="", yaxt='n', main="B", adj=0, xaxt='n')
-text(as.Date("2015-01-07"), 4, "tMRCA", col = col2, font = 1)
+if(virus == "ZIKV"){
+  plot(case.data$dates, case.data$y.vals, col=col1, lwd=cexplot, pch=16, bty='n',ylim=c(0,10),type=tt, 
+       xlab="Date", ylab="", yaxt='n', main="B", adj=0, xaxt='n')
+  text(as.Date("2015-01-07"), 4, "tMRCA", col = col2, font = 1)
+  mtext("Zika cases", side=4, line=2, col=col1, cex=1, font=1)
+}
 axis(4, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
-mtext("Zika cases", side=4, line=2, col=col1, cex=1, font=1)
 mtext("Serological samples collected", side=4, line=2, col="Gray", cex=1, padj = 1.5, font=2)
 par(new=T)
 plot(case.data$dates, case.data$denv.cases, col=col4, lwd=cexplot, pch=16,type='l',
@@ -281,12 +283,11 @@ for(ii in 1:length(btstrap)){
   b_vary <- beta_ii
   
   s_pick <- s_trace_tab[b_ii,1:tMax]/thetatab$npop[b_ii] 
-  x_pick <- x_trace_tab[b_ii,1:tMax] 
   c_pick <- c_trace_tab[b_ii,1:tMax]/thetatab$npop[b_ii] 
   r_pick <- r_trace_tab[b_ii,1:tMax]/thetatab$npop[b_ii] 
   
-  output_rr <- calculate_r0(th_in=thetatab[b_ii,],sus_c=s_pick,sus_a=0,sm_c=x_pick,sm_a=0,b_vary=b_vary*decline_ii)
-  output_rr_nocontrol <- calculate_r0(th_in=thetatab[b_ii,],sus_c=s_pick,sus_a=0,sm_c=x_pick,sm_a=0,b_vary=b_vary)
+  output_rr <- calculate_r0(th_in=thetatab[b_ii,],sus_c=s_pick,sus_a=0,sm_c=0,sm_a=0,b_vary=b_vary*decline_ii)
+  output_rr_nocontrol <- calculate_r0(th_in=thetatab[b_ii,],sus_c=s_pick,sus_a=0,sm_c=0,sm_a=0,b_vary=b_vary)
   
   start.rr <- output_rr$rr_out[min(which(output_rr$rr_out>0))]
   output_rr$rr_out[1:(min(which(output_rr$rr_out>0))-1)] <- start.rr
@@ -459,7 +460,7 @@ if(output_diagnostics==T){
   ## trace plots 
   labelN=1
   iiH=1
-  parameters_to_estimate <- c("r0", names(thetatab)[diag(var(thetatab))!=0 & !is.na(diag(var(thetatab)))])
+  parameters_to_estimate <- c(names(thetatab)[diag(var(thetatab))!=0 & !is.na(diag(var(thetatab)))])
   parameters_names <- str_replace(parameters_to_estimate, 
                                   pattern = c("r0",
                                               "beta_h",
@@ -489,7 +490,7 @@ if(output_diagnostics==T){
   par(mfrow=c(round(height_plot/2),4), mar  = c(2,3,1,3))
   ## function to split thetatab into chains and plot together
   plot_trace <- function(param){
-    chain_length <- length(thetatab$b_rate)/m.tot
+    chain_length <- length(thetatab$npop)/m.tot
     d <- thetatab[, param]
     dsplit <- split(d, ceiling(seq_along(d)/chain_length))
     ylims <- c(max(0, min(d)-(0.25*min(d))), max(d)*1.25)
@@ -502,14 +503,14 @@ if(output_diagnostics==T){
   hist(d, col=col1, xlab=param, main=paste0("ESS = ", signif(effectiveSize(thetatab[[param]]), 3)))
   }
     ## plot r0
-    r0_chain <- apply(thetatab, 1, function(x) calculate_r0_adam(th_in = as.list(x), sus_c = 342000, sus_a = 0, sm_c = 1, sm_a = 1, b_vary = 1)$r0_out)
+    r0_chain <- apply(thetatab, 1, function(x) calculate_r0(th_in = as.list(x), sus_c = 342000, sus_a = 0, sm_c = 1, sm_a = 1, b_vary = 1)$r0_out)
     thetatab$r0 <- r0_chain
   sapply(parameters_to_estimate, function(xx){plot_trace(xx)})
-  dev.copy(pdf, "post_plotsZ/fig5_diagnostics.pdf", width = 10, height=10)
+  dev.copy(pdf, "output/fig5_diagnostics.pdf", width = 10, height=10)
     dev.off()
   
   ## correlation plot
-  pdf("post_plotsZ/fig6_correlation.pdf", width = 16, height = 16)
+  pdf("output/fig6_correlation.pdf", width = 16, height = 16)
   n_param <- length(parameters_to_estimate)
   par(mfrow=c(n_param, n_param), mar  = c(2,3,1,3))
   
@@ -552,32 +553,19 @@ iiH=1
 
 is.it.missing <- function(x){if(is.na(sum(x))){rep(0,max(picks))}else{x}}
 beta_h1 <- is.it.missing(thetatab$beta_h )
-beta_h3 <- is.it.missing(thetatab$beta_h_3)
-beta_h2 <- is.it.missing(thetatab$beta_h_2)
-beta_v1 <- is.it.missing(thetatab$beta_v )
-beta_v2 <- is.it.missing(thetatab$beta_v )
-beta_v3 <- is.it.missing(thetatab$beta_v )
 Nsize <-   is.it.missing(thetatab$npop)
-NsizeC <- is.it.missing(thetatab$npopC)
-NsizeA <- is.it.missing(thetatab$npopA)
-delta_v <- is.it.missing(thetatab$MuV)
-alpha_v <- is.it.missing(thetatab$Vex)
 alpha_h <- is.it.missing(thetatab$Exp)
 gamma <-   is.it.missing(thetatab$Inf.)
-imm0 <-  is.it.missing(thetatab$imm0)
 rep <-     is.it.missing(thetatab$rep )
 repvol <- is.it.missing(thetatab$repvol )
 amp <-     is.it.missing(thetatab$beta_v_amp)
 mid <-     is.it.missing(thetatab$beta_v_mid)
 inf0 <-  is.it.missing(thetatab$inf0)
 rec0 <-  is.it.missing(thetatab$rec0)
-vec0 <-  is.it.missing(theta_inittab$im_init)
 omega <-  is.it.missing(thetatab$omega_d)
 chi <-  is.it.missing(thetatab$chi)
 epsilon <-  is.it.missing(thetatab$epsilon)
 rho <-  is.it.missing(thetatab$rho)
-iota <-  is.it.missing(thetatab$iota)
-beta_mask <-  is.it.missing(thetatab$beta_mask)
 beta_base <-  is.it.missing(thetatab$beta_base)
 beta_grad <-  is.it.missing(thetatab$beta_grad)
 beta_mid <-  is.it.missing(thetatab$beta_mid)
@@ -602,11 +590,8 @@ param1 <- cbind(
   c.text(r0_post,3),
   c.text(rr_post,3),
   c.text(beta_h1[picks],2),
-  c.text(beta_v1[picks],2),
   c.text(1/alpha_h[picks],2),
   c.text(1/gamma[picks],2),
-  c.text(1/alpha_v[picks],2),
-  c.text(1/delta_v[picks],2),
   c.text(rep[picks],2),
   c.text(repvol[picks],2),
   c.text(amp[picks],2),
@@ -628,8 +613,9 @@ param1 <- cbind(
 rownames(param1)=c(locationtab[iiH])
 colnames(param1)=c(
   "R0", "RR",
-  "beta_h","beta_v","Intrinsic incubation period",
-  "Infectious period","Extrinsic incubation period","Mosquito lifespan",
+  "beta_h",
+  "Intrinsic incubation period",
+  "Infectious period",
   "Reporting rate","Reporting dispersion",
   "Seasonal amplitude","Seasonal midpoint",
   "Cross immunity period","Cross protection",
