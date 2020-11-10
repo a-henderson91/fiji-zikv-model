@@ -20,17 +20,11 @@ zikv_model_ode <- function(theta, init.state, time.vals.sim) {
       beta_h1 <- theta[['beta_h']]*
         seasonal_f(time, date0=theta[["shift_date"]],amp=theta[["beta_v_amp"]],mid=theta[["beta_v_mid"]])*
         control_f(time, base=theta[["beta_base"]], mid=theta[["beta_mid"]], width=theta[["beta_width"]]) 
-      beta_v1 <- beta_h1*theta[['beta_v']]
-      delta_v  <- theta[["MuV"]] 
-      alpha_v <-  theta[["Vex"]]
       alpha_h <-  theta[["Exp"]]
       gamma <-    theta[["Inf"]]
-      tau <-    theta[["tau"]]
-      m <-    theta[["m"]]
       
       # FOI
       lambda_h <- beta_h1
-      lambda_m <- beta_v1
       
       ## extract initial states from theta_init
       S <- state[["s_init"]]
@@ -44,9 +38,6 @@ zikv_model_ode <- function(theta, init.state, time.vals.sim) {
       T1d <- state[["t1d_init"]]
       T2d <- state[["t2d_init"]]
       Cd <- state[["cd_init"]]
-      SM <- state[["sm_init"]]
-      EM <- state[["em_init"]]
-      IM <- state[["im_init"]]
       
       ## extinction if not at least 1 infected
       Ipos = extinct(I,1) # Need at least one infective
@@ -57,11 +48,11 @@ zikv_model_ode <- function(theta, init.state, time.vals.sim) {
       initDenv <- intro_f(time, mid = theta[["denv_start_point"]], width = 0.25, base = 160) ## fixed so that approx ~160 introduction happen on 2013-10-27
       
       # Human population
-      dS  =  - S*(lambda_h*IM)*Ipos - chi*Sd*(beta_d*Id/Nsize) + chi*(2*omega_d*T2d) 
-      dE  =  S*(lambda_h*IM)*Ipos - alpha_h*E  
+      dS  =  - S*(lambda_h*I/Nsize)*Ipos - chi*Sd*(beta_d*Id/Nsize) + chi*(2*omega_d*T2d) 
+      dE  =  S*(lambda_h*I/Nsize)*Ipos - alpha_h*E  
       dI  = alpha_h*E  - gamma*I + intro_zikv
       dR  = gamma*I - rho*R
-      dC  = alpha_h*E 
+      dC  = alpha_h*E
       
       # Denv infection and temporary immunity
       dSd = -Sd*(beta_d*Id/Nsize)*Idpos
@@ -71,12 +62,7 @@ zikv_model_ode <- function(theta, init.state, time.vals.sim) {
       dT2d = 2*omega_d*T1d - 2*omega_d*T2d
       dCd = alpha_d*Ed
       
-      # Mosquito population
-      dSM = delta_v - SM*(lambda_m*I/Nsize)*Ipos - delta_v*SM   
-      dEM = SM*(lambda_m*I/Nsize)*Ipos - (delta_v+alpha_v)*EM  
-      dIM = alpha_v*EM-delta_v*IM
-    
-    return(list(c(dS,dE,dI,dR,dC,dSd,dEd,dId,dT1d,dT2d,dCd,dSM,dEM,dIM)))
+    return(list(c(dS,dE,dI,dR,dC,dSd,dEd,dId,dT1d,dT2d,dCd)))
   }
   traj <- as.data.frame(ode(init.state, time.vals.sim, SIR_ode, theta, method = "ode45"))
   return(traj)

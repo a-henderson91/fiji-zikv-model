@@ -11,7 +11,7 @@
 #' @export
 #theta=c(theta_star,thetaA_star,theta_denv); theta_init=theta_init_star; locationI=locationtab[iiH]; seroposdates=seroposdates; include.count=include.count
 Deterministic_modelR_final_DENVimmmunity <- function(theta, theta_init, locationI, seroposdates, episeason, include.count=T){
-    theta[["denv_start_point"]] <- as.Date("2013-10-27")-startdate ## 
+    theta[["denv_start_point"]] <- as.Date("2013-10-27") - startdate 
     theta[["zika_start_point"]] <- theta[["intro_mid"]] ## these are poorly named. "zika_start_point" just refers to the main disease of interest. And 'denv_start_point' is the fixed background DENV3
 
     # These values tell how to match states of compartment with data points
@@ -21,8 +21,7 @@ Deterministic_modelR_final_DENVimmmunity <- function(theta, theta_init, location
     # set initial conditions
     init1=c(
       s_init=theta_init[["s_init"]],e_init=theta_init[["i1_init"]],i_init=theta_init[["i1_init"]],r_init=theta_init[["r_init"]],c_init=0,
-      sd_init=theta_init[["sd_init"]],ed_init=theta_init[["ed_init"]],id_init=theta_init[["id_init"]],t1d_init=theta_init[["t1d_init"]],t2d_init=theta_init[["t2d_init"]],cd_init=0,
-      sm_init=theta_init[["sm_init"]],em_init=theta_init[["em_init"]],im_init=theta_init[["im_init"]])
+      sd_init=theta_init[["sd_init"]],ed_init=theta_init[["ed_init"]],id_init=theta_init[["id_init"]],t1d_init=theta_init[["t1d_init"]],t2d_init=theta_init[["t2d_init"]],cd_init=0)
 
     if(!is.na(theta[['epsilon']])){
       epsilon <- theta[['epsilon']]}else{
@@ -42,29 +41,13 @@ Deterministic_modelR_final_DENVimmmunity <- function(theta, theta_init, location
     
     # Match compartment states at sim.vals time
     S_traj <- output[match(time.vals.sim,output$time),"s_init"]
-    X_traj <- output[match(time.vals.sim,output$time),"sm_init"]
     R_traj <- output[match(time.vals.sim,output$time),"r_init"]
     I_traj <- output[match(time.vals.sim,output$time),"i_init"]
     cases1 <- output[match(time.vals.sim,output$time),"c_init"]
     casesD <- output[match(time.vals.sim,output$time),"cd_init"]
-    SD <- output[match(time.vals.sim,output$time),"sd_init"]
-    ED <- output[match(time.vals.sim,output$time),"ed_init"]
-    ID <- output[match(time.vals.sim,output$time),"id_init"]
-    RD <- output[match(time.vals.sim,output$time),"rd_init"]
     casecountD <- casesD-c(0,casesD[1:(length(time.vals.sim)-1)])
     casecount <- cases1-c(0,cases1[1:(length(time.vals.sim)-1)])
     casecount[casecount<0] <- 0
-      #plot(date.vals, casecount[1:length(date.vals)])
-      #plot(date.vals[1:length(casecount)],ReportC(cases = casecount,rep = theta['rep'], repvol = theta['repvol']),type='l', col=4)
-      #points(date.vals,y.vals,type='l',col=2)
-      #######
-      #plot(date.vals[1 :length(casecount)],casecount,type='l',col=4)
-      #abline(v=startdate+theta[["zika_start_point"]])
-      #par(new=T)
-      #plot(date.vals, sapply(time.vals, function(xx){control_f(xx, base=theta[["beta_base"]], grad=0.25, mid=theta[["beta_mid"]], mid2=theta[["beta_mid"]]+30, width=theta[["beta_grad"]])}), type='l', ylab="", yaxt="n", ylim=c(0,1))
-      #par(new=T)
-      #plot(date.vals[1:length(casecount)],R_traj/theta[["npop"]],type='l',col=4,yaxt='n',xaxt='n',ylim=c(0,1))
-      #axis(side=4)
 
     # Calculate seropositivity at pre-specified dates and corresponding likelihood
     i=1; seroP=NULL; binom.lik=NULL
@@ -102,6 +85,6 @@ Deterministic_modelR_final_DENVimmmunity <- function(theta, theta_init, location
 
     # Return results
     output1=list(C_trace=casecount,CD_trace=casecountD,I_trace=I_traj,
-                 S_trace=S_traj,R_trace=R_traj,X_trace=X_traj,
+                 S_trace=S_traj,R_trace=R_traj,
                  lik=likelihood, newDates=date.vals)
 }
