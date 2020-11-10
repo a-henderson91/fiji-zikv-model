@@ -1,9 +1,2 @@
 param,Central2014,Zika2016
-b_rate,4.93,4.93
-d_rate,15.47,15.47
-npop,342000,342000
-npopC,148462,148462
-npopA,233240,233240
-beta_h_2,1,1
-beta_h_3,1,1
-shift_date,0,0
+npop,342000,NA
