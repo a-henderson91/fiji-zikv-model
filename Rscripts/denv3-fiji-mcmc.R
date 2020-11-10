@@ -12,11 +12,12 @@ sapply(here::here("Rfunctions", r_functions), source, .GlobalEnv)
 
 # load data and setup with fixed DENV intro date Oct 27th 2013
 prior_vectorcontrol <- function(x){dunif(x,0,1)}
-denv_data <- load.data.multistart(Virus = "DEN3", startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0) #virusTab[iiH], dataTab[iiH])
+denv_data <- load.data.multistart(Virus = "DEN3", startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0)
   list2env(denv_data,globalenv())
 denv.timeseries <- denv_data$y.vals
 denv.dates <- denv_data$date.vals
 load(file=here::here("data/theta_denv.RData"))
+theta_denv
 
 # Set up results objects, initial values and covariance matrices ----------
 setup <- results_set_up(iiH, "parameters_est_denv3")
@@ -29,7 +30,7 @@ source(here::here("Rscripts/prior_distributions.R"))
 
 priorIntro <- function(x){dunif(x, min=0, max=307)} ## DENV import mid point is 2013-11-07 (first case reported) at latest
 priorInitInf <- function(x){dunif(x, min=0, max=1000)} ## DENV import max is 1000 in one day
-  
+
 # load climate data -------------------------------------------------------
 weather.data <- read.csv(here::here("data/suva-temp.csv"), stringsAsFactors = T) # Load DLI dengue data
 weather.data$lsd <- as.Date(weather.data$lsd)
@@ -95,10 +96,6 @@ plot(mordecai_tempR0$aegy.temps.DTR8, mordecai_tempR0$R0.rel, type="l", bty="n",
      xlab="Temperature (C)", ylab="Relative R0")
 lines(c(med_avgT,med_avgT), c(0,1), col=col1)
   polygon(c(lq_avgT, uq_avgT, uq_avgT, lq_avgT), c(0,0,1,1), lty=0, col=col1a)
-#lines(c(med_minT,med_minT), c(0,1), col=col1)
-#polygon(c(lq_minT, uq_minT, uq_minT,lq_minT), c(0,0,1,1), lty=0, col=col1a)
-#lines(c(med_maxT,med_maxT), c(0,1), col=col2)
-#polygon(c(lq_maxT, uq_maxT, uq_maxT, lq_maxT), c(0,0,1,1), lty=0, col=col2a)
 dev.copy(pdf, here::here("output/fig_supp_mordecaiFijitemp.pdf"), 6, 4)
   dev.off()
 
@@ -127,28 +124,41 @@ if(seasonal.transmission == T){
 }else{
   thetaAlltab[1,,'beta_v_amp'] <- 0
 }  
+
 # set weakly informative priors for main model fit 
-priorBeta_amp<-function(x){dunif(x,min=0, max=1)} 
-priorBeta_mid<-function(x){dunif(x,min=0, max=1)} 
+priorBeta_amp <- function(x){dunif(x,min=0, max=1)} 
+priorBeta_mid <- function(x){dunif(x,min=0, max=1)} 
 
 # Print starting conditions for model run --------------------------
 print("Theta initial starting conditions")
 thetaAlltab[1,,]
 diag(cov_matrix_thetaAll)
 
+iiH <- 2
+source(here::here("Rscripts/den3-single-simulation.R"))
+initial_beta_h <- thetaAlltab[1,iiH,][["beta_h"]]
+denv3_single_sim(0.4)
+#if(denv3_single_sim(initial_beta_h) == -Inf){
+  t_rate <- seq(0.3, 0.8, 0.1)
+  lik_search <- sapply(t_rate, function(xx){denv3_single_sim(xx)})
+  max_beta_h <- t_rate[which(lik_search==max(lik_search))]
+  thetaAlltab[1,iiH,"beta_h"] <- max_beta_h[1]
+#}
+thetaAlltab[1,,]
+
 # Run MCMC loop and save results ------------------------------------------
 (st.time <- Sys.time())
 
 m = 1; iiM=1
 foreach(iiM=multichain) %dopar% {  # Loop over regions with parallel MCMC chains
-adapt_size_start=round(0.1*MCMC.runs)
+adapt_size_start <- round(0.1*MCMC.runs)
   for (m in 1:MCMC.runs){
     # Scale COV matrices for resampling using error term epsilon
     if(m==1){
       epsilon0 = 0.0001
-      cov_matrix_theta=epsilon0*cov_matrix_theta0
-      cov_matrix_thetaA=epsilon0*cov_matrix_thetaAll
-      cov_matrix_theta_init=epsilon0*cov_matrix_theta_initAll
+      cov_matrix_theta <- epsilon0*cov_matrix_theta0
+      cov_matrix_thetaA <- epsilon0*cov_matrix_thetaAll
+      cov_matrix_theta_init <- epsilon0*cov_matrix_theta_initAll
       # set current values for vectors to be updated in MH algroithm 
       thetatab_current = thetatab[m,]
       thetaAlltab_current = thetaAlltab[m,,]
@@ -157,7 +167,6 @@ adapt_size_start=round(0.1*MCMC.runs)
       cd_trace_tab_current = cd_trace_tab[m,,]
       s_trace_tab_current = s_trace_tab[m,,]
       r_trace_tab_current = r_trace_tab[m,,]
-      x_trace_tab_current =  x_trace_tab[m,,]
       sim_liktab_current = sim_liktab[m]
       prior_current = prior[m]
       covmat.empirical <- cov_matrix_thetaA
@@ -192,7 +201,6 @@ adapt_size_start=round(0.1*MCMC.runs)
     cdTraceStar=0*cd_trace_tab_current
     sTraceStar=0*s_trace_tab_current
     rTraceStar=0*r_trace_tab_current
-    xTraceStar=0*x_trace_tab_current
     for(kk in 2){ ## settng kk==2 means running the model for DENV3 not ZIKV
       iiH <- kk
       data <- load.data.multistart(Virus = "DEN3", startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0) #virusTab[iiH], dataTab[iiH])
@@ -208,7 +216,7 @@ adapt_size_start=round(0.1*MCMC.runs)
         
         # Run model simulation
         output1 <- Deterministic_modelR_final_DENVimmmunity(theta=c(theta_star,thetaA_star,theta_denv), theta_init_star, locationI=locationtab[iiH], seroposdates=seroposdates, include.count=include.count)
-        (sim_marg_lik_star <- sim_marg_lik_star + output1$lik)
+          (sim_marg_lik_star <- sim_marg_lik_star + output1$lik)
         
         #Store vales
         thetaAllstar[iiH,] <- thetaA_star
@@ -223,7 +231,6 @@ adapt_size_start=round(0.1*MCMC.runs)
         cdTraceStar[iiH,]=c(extra.zero,output1$CD_trace[(start.of.output1:length.of.output1)])
         sTraceStar[iiH,]=c(extra.zero,output1$S_trace[(start.of.output1:length.of.output1)])
         rTraceStar[iiH,]=c(extra.zero,output1$R_trace[(start.of.output1:length.of.output1)])
-        xTraceStar[iiH,]=c(extra.zero,output1$X_trace[(start.of.output1:length.of.output1)])
         
         # Calculate prior density for current and proposed theta set
         prior.theta <- ComputePrior(iiH, c(thetatab_current,thetaAlltab_current[iiH,]), c(theta_star,thetaA_star), covartheta = cov_matrix_thetaA)
@@ -257,7 +264,6 @@ adapt_size_start=round(0.1*MCMC.runs)
         cd_trace_tab[j+1,,] <- cdTraceStar
         s_trace_tab[j+1,,] <- sTraceStar
         r_trace_tab[j+1,,] <- rTraceStar
-        x_trace_tab[j+1,,] <- xTraceStar
         sim_liktab[j+1] <- sim_marg_lik_star
         accepttab[j] <- 1
         prior[j+1] <- prior.star
@@ -269,7 +275,6 @@ adapt_size_start=round(0.1*MCMC.runs)
         cd_trace_tab[j+1,,]=cd_trace_tab[j,,]
         s_trace_tab[j+1,,]=s_trace_tab[j,,]
         r_trace_tab[j+1,,]=r_trace_tab[j,,]
-        x_trace_tab[j+1,,]=x_trace_tab[j,,]
         sim_liktab[j+1] = sim_liktab[j]
         accepttab[j]=0
         prior[j+1] = prior[j] 
@@ -287,7 +292,6 @@ adapt_size_start=round(0.1*MCMC.runs)
       cd_trace_tab_current = cdTraceStar
       s_trace_tab_current = sTraceStar
       r_trace_tab_current = rTraceStar
-      x_trace_tab_current = xTraceStar
       sim_liktab_current = sim_marg_lik_star
       prior_current = prior.star
     }
@@ -301,7 +305,6 @@ adapt_size_start=round(0.1*MCMC.runs)
               "acc"=signif(accept_rate,3), 
               "lik"=signif(sim_liktab_current,3),
               signif(thetaAlltab_current[2,'beta_h'],3),
-              signif(thetaAlltab_current[2,'beta_v'],3),
               thetaAlltab_current[2,'beta_base'],
               thetaAlltab_current[2,'intro_base']),
               digits = 2)
@@ -312,7 +315,6 @@ adapt_size_start=round(0.1*MCMC.runs)
            cd_trace_tab,
            s_trace_tab,
            r_trace_tab,
-           x_trace_tab,
            thetatab,
            thetaAlltab,
            theta_initAlltab,

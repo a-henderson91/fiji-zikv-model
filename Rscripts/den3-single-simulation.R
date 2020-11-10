@@ -4,9 +4,9 @@
 # github.com/
 # - - - - - - - - - - - - - - - - - - - - - - - 
 
-zika_single_sim <- function(transmission_rate){
-  zika_data <- data.frame(date=as.Date(date.vals), Zika2016=y.vals)
-  zika_data$date <- as.Date(zika_data$date)
+denv3_single_sim <- function(transmission_rate){
+  denv3_data <- data.frame(date=as.Date(date.vals), cases = y.vals)
+  denv3_data$date <- as.Date(denv3_data$date)
   
   # Change parameter values -------------------------------------------------
   par(mfrow=c(2,1), mar = c(3,4,1,3))
@@ -66,7 +66,7 @@ zika_single_sim <- function(transmission_rate){
   date0 = (model_st-date.vals[1]) %>% as.numeric() 
   
   beta_ii <- seasonal_f(time.V[1:tMax], date0, amp=theta[["beta_v_amp"]], mid=theta[["beta_v_mid"]])
-    #decline_ii <- decline_f(time.V[1:tMax], mid=theta[["beta_mid"]], width=theta[["beta_grad"]], base=theta[["beta_base"]])
+  #decline_ii <- decline_f(time.V[1:tMax], mid=theta[["beta_mid"]], width=theta[["beta_grad"]], base=theta[["beta_base"]])
   decline_ii <- control_f(time.V[1:tMax], base=theta[["beta_base"]], mid=theta[["beta_mid"]], width=theta[["beta_width"]])
   b_vary = beta_ii#*decline_ii
   
@@ -93,7 +93,7 @@ zika_single_sim <- function(transmission_rate){
   sero.years <- format(as.Date(seroposdates, format="%d/%m/%Y"),"%Y")
   sero.y <- substr(sero.years,3,4)
   lum.y <- c("13","15","17")
-  for(date in seroposdates){
+  for(date in seroposdates[1:2]){
     if(date < min(date.vals)){ 
       seroP[i] <- epsilon
       binom.lik[i] <- (dbinom(nLUM[lum.y==sero.y[i]], size=nPOP[lum.y==sero.y[i]], prob=seroP[i], log = T))
@@ -113,12 +113,11 @@ zika_single_sim <- function(transmission_rate){
   # Plot simulation ---------------------------------------------------------
   plot(date.vals, casecount, type='l', col=2, xlab="Year", ylab="Infections (cases)",ylim=c(0,2e4),
        main=paste0("Start: ", startdate+theta[["intro_mid"]],"   |   lik:", signif(likelihood,4),"  |  medR0: ", signif(median(r0_post),3), " | intro:", round(total_intro,0)))
-  points(date.vals, c(denv_data$y.vals, rep(NA, 112)), col = "gray60")
-  lines(date.vals,casecountD*0.1)
+  lines(date.vals,casecountD)
   par(new=T)
-  plot(date.vals, y.vals, type='h', col=4, yaxt='n', xaxt='n', xlab="", ylab="", ylim=c(0,5))
-  lines(date.vals,sapply(time.vals, function(xx){intro_f(xx, mid = theta[["zika_start_point"]], width = theta[["intro_width"]], base = theta[["intro_base"]])}),
-        type='l',col = 3, yaxt='n', xaxt='n', xlab="", ylab="")
+  plot(date.vals, y.vals, type='l', col=4, yaxt='n', xaxt='n', xlab="", ylab="", ylim=c(0,1000))
+  lines(date.vals, sapply(time.vals, function(xx){intro_f(xx, mid = theta[["zika_start_point"]], width = theta[["intro_width"]], base = theta[["intro_base"]])}),
+        type='l', col=1, yaxt='n', xaxt='n', xlab="", ylab="")
   axis(side=4)
   mtext("Introductions", side=4, cex = 0.7, padj=3)
   
@@ -127,11 +126,10 @@ zika_single_sim <- function(transmission_rate){
   lines(date.vals,decline_ii, type='l',col=2, yaxt='n', xaxt='n')
   par(new=T)
   plot(date.vals, (R_traj/342000)+theta[["epsilon"]], type='l', col=22, yaxt='n', xaxt='n', xlab="", ylab="", ylim=c(0,1))
-  points(seroposdates, (nLUM/nPOP), col=4, pch=1)
+  points(c(as.Date("2013-11-15"), max(date.vals)), (nLUM[1:2]/nPOP[1:2]), col=4, pch=16)
   axis(side=4)
   
   return(likelihood)
 }
 
-zika_single_sim(0.33)
-zika_single_sim(0.27)
+denv3_single_sim(0.33)

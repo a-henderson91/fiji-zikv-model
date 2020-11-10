@@ -14,7 +14,7 @@ data <- load.data.multistart(Virus = "ZIKV", startdate = start.output.date, sero
 # Load and store denv2014 posteriors -----------------------------------------------
 labelN <- 1
 iiH <- 2
-load_posterior_1 <- load.posteriors(load.run.name=model1_name, file.path="posterior_denv2014fit", iiH, mcmc.burn=mcmc.burn)
+load_posterior_1 <- load.posteriors(load.run.name = model1_name, file.path="posterior_denv2014fit", iiH, mcmc.burn=mcmc.burn)
   list2env(load_posterior_1,globalenv())
 iiH <- 1
 ## fixed DENV3 2014 values to simulate 2013-14 DENV-3 outbreak
@@ -27,12 +27,12 @@ denv.timeseries <- denv_data$y.vals
 denv.dates <- denv_data$date.vals
 
 ## plot posterior of cases
-tMax <- dim(c_trace_tab)[2]
+tMax <- length(load_posterior_1$c_trace_tab[1,])
 btsp <- 4000
 cvector <- matrix(NA,nrow=btsp,ncol=tMax)
 for(ii in 1:btsp){
     pick <- sample(picks, 1)
-    cvector[ii,] <- ReportC(c_trace_tab[pick,1:tMax],thetatab[pick,'rep'],thetatab[pick,'repvol'])
+    cvector[ii,] <- ReportC(load_posterior_1$c_trace_tab[pick,1:tMax],thetatab[pick,'rep'],thetatab[pick,'repvol'])
 }
 medP <- apply(cvector,2,function(x){median(x, na.rm=T)})
 ciP1 <- apply(cvector,2,function(x){quantile(x,0.025, na.rm=T)})
@@ -47,7 +47,6 @@ mtext(LETTERS[1],side=3, adj=0, font=2)
 grid(NA,NULL, lty = 1, col = colgrid) 
 
 # calculate empirical distributions from DENV3 2014 fit -------------------
-model1_pars_estimated <- apply(thetatab,2,function(x){var(x)})
 priorFit <- fitdistr(thetatab$beta_base, densfun="normal")
 
 prior_vectorcontrol <- function(x){dnorm(x, mean=priorFit$estimate[1], sd=priorFit$estimate[2])}
@@ -57,14 +56,12 @@ curve(prior_vectorcontrol(x), col=col2, lwd=2, add=T, yaxt="n")
 ## save posterior estiamtes from 2014 DENV 
 denv3_2014_esimates <- data.frame(NA)
 denv3_2014_esimates$beta_h <- median(thetatab$beta_h, na.rm=T)
-denv3_2014_esimates$beta_v <- median(thetatab$beta_v, na.rm=T)
 denv3_2014_esimates$beta_v_amp <- median(thetatab$beta_v_amp, na.rm=T)
 denv3_2014_esimates$beta_v_mid <- median(thetatab$beta_v_mid, na.rm=T)
 denv3_2014_esimates$beta_grad <- median(thetatab$beta_grad, na.rm=T)
 denv3_2014_esimates$beta_mid <- median(thetatab$beta_mid, na.rm=T)
 denv3_2014_esimates$beta_base <- median(thetatab$beta_base, na.rm=T)
 denv3_2014_esimates$beta_width <- median(thetatab$beta_width, na.rm=T)
-denv3_2014_esimates$mosq_ratio <- median(thetatab$m, na.rm=T)
 
 # Load ZIKV data  --------------------------------------------------------------
 list2env(data,globalenv())
@@ -72,7 +69,7 @@ list2env(data,globalenv())
 # Set up results objects, initial values and covariance matrices ----------
 setup <- results_set_up(iiH, parameter_est_file = "parameters_est")
   list2env(setup, globalenv())
-
+  setup$thetaAlltab[1,,]
 # Set up Priors  ----------------------------------------------------------
 ## Estimate prior distribution for ZIKV intro time from BEAST output
 source(here::here("Rscripts/load_tmrca_calc_prior.R"))
@@ -85,7 +82,6 @@ thetaAlltab[1,iiH,'beta_v_mid'] <- denv3_2014_esimates$beta_v_mid ## seasonality
 thetaAlltab[1,iiH,'beta_grad'] <- denv3_2014_esimates$beta_grad
 thetaAlltab[1,iiH,'beta_mid'] <- denv3_2014_esimates$beta_mid
 thetaAlltab[1,iiH,'beta_width'] <- denv3_2014_esimates$beta_width
-thetaAlltab[1,iiH,'m'] <- denv3_2014_esimates$mosq_ratio
 
 if(include.2014.control == T){
   thetaAlltab[1,iiH,'beta_base'] <- denv3_2014_esimates$beta_base
@@ -102,7 +98,7 @@ control_plot <- sapply(1:max(time.vals), function(xx){control_f(xx,
                                          )})
 #plot(date.vals[30:100], control_plot[30:100], type="l", ylim=c(0,1), bty="n", ylab="Relative transmission", xlab="Date", xaxt="n")
 plot(startdate+(1:max(time.vals))[340:(340+180)], control_plot[340:(340+180)], type="l", ylim=c(0,1), bty="n", ylab="Relative transmission", xlab="Date", xaxt="n")
-axis.Date(side=1, at=seq.Date(date.vals[30], date.vals[100], by = "1 months"), "months", format = "%b%y")
+  axis.Date(side=1, at=seq.Date(date.vals[30], date.vals[100], by = "1 months"), "months", format = "%b%y")
 
 dev.copy(pdf, here::here("output/fig_supp_controlFn.pdf"), 6,4)
   dev.off()
@@ -111,11 +107,13 @@ dev.copy(pdf, here::here("output/fig_supp_controlFn.pdf"), 6,4)
 source(here::here("Rscripts/zika-single-simulation.R"))
 initial_beta_h <- thetaAlltab[1,iiH,][["beta_h"]]
 zika_single_sim(initial_beta_h)
+zika_single_sim(0.25)
 if(zika_single_sim(initial_beta_h)==-Inf){
-  t_rate <- seq(0.3,0.4,0.01)
-  lik_search <- sapply(seq(0.3,0.4,0.01), function(xx){zika_single_sim(xx)})
+  t_rate <- seq(0.2, 0.5, 0.01)
+  lik_search <- sapply(t_rate, function(xx){zika_single_sim(xx)})
   max_beta_h <- t_rate[which(lik_search==max(lik_search))]
-  thetaAlltab[1,iiH,"beta_h"] <- max_beta_h
+  thetaAlltab[1,iiH,"beta_h"] <- max_beta_h[1]
+zika_single_sim(max_beta_h[1])
 }
 
 ## Plot "introduction function" with initial starting values
@@ -161,7 +159,6 @@ for (m in 1:MCMC.runs){
     cd_trace_tab_current = cd_trace_tab[m,,]
     s_trace_tab_current = s_trace_tab[m,,]
     r_trace_tab_current = r_trace_tab[m,,]
-    x_trace_tab_current =  x_trace_tab[m,,]
     sim_liktab_current = sim_liktab[m]
     prior_current = prior[m]
     covmat.empirical <- cov_matrix_thetaA
@@ -173,7 +170,7 @@ for (m in 1:MCMC.runs){
     scaling.multiplier <- exp((1-1e-7)^(m-adapt_size_start)*(accept_rate-0.234))
     epsilon0 <- epsilon0 * scaling.multiplier
     epsilon0 <- min(epsilon0, 0.5)
-    epsilon0 <- max(epsilon0, 1e-10)
+    epsilon0 <- max(epsilon0, 1e-15)
     
     cov_matrix_theta=epsilon0*cov_matrix_theta0
     cov_matrix_thetaA=epsilon0*cov_matrix_thetaAll
@@ -198,7 +195,6 @@ for (m in 1:MCMC.runs){
   cdTraceStar <- 0*cd_trace_tab_current
   sTraceStar <- 0*s_trace_tab_current
   rTraceStar <- 0*r_trace_tab_current
-  xTraceStar <- 0*x_trace_tab_current
   for(kk in 1){ #itertab){ 
     iiH <- kk
     data <- load.data.multistart(Virus = virusTab[iiH], startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0) #virusTab[iiH], dataTab[iiH])
@@ -229,7 +225,6 @@ for (m in 1:MCMC.runs){
     cdTraceStar[iiH,]=c(extra.zero,output1$CD_trace[(start.of.output1:length.of.output1)])
     sTraceStar[iiH,]=c(extra.zero,output1$S_trace[(start.of.output1:length.of.output1)])
     rTraceStar[iiH,]=c(extra.zero,output1$R_trace[(start.of.output1:length.of.output1)])
-    xTraceStar[iiH,]=c(extra.zero,output1$X_trace[(start.of.output1:length.of.output1)])
     
     # Calculate prior density for current and proposed theta set
     prior.theta <- ComputePrior(iiH, c(thetatab_current,thetaAlltab_current[iiH,]), c(theta_star,thetaA_star), covartheta = cov_matrix_thetaA)
@@ -263,7 +258,6 @@ for (m in 1:MCMC.runs){
       cd_trace_tab[j+1,,]=cdTraceStar
       s_trace_tab[j+1,,]=sTraceStar
       r_trace_tab[j+1,,]=rTraceStar
-      x_trace_tab[j+1,,]=xTraceStar
       sim_liktab[j+1] = sim_marg_lik_star
       accepttab[j]=1
       prior[j+1] = prior.star
@@ -275,7 +269,6 @@ for (m in 1:MCMC.runs){
       cd_trace_tab[j+1,,]=cd_trace_tab[j,,]
       s_trace_tab[j+1,,]=s_trace_tab[j,,]
       r_trace_tab[j+1,,]=r_trace_tab[j,,]
-      x_trace_tab[j+1,,]=x_trace_tab[j,,]
       sim_liktab[j+1] = sim_liktab[j]
       accepttab[j]=0
       prior[j+1] = prior[j] 
@@ -293,7 +286,6 @@ for (m in 1:MCMC.runs){
     cd_trace_tab_current = cdTraceStar
     s_trace_tab_current = sTraceStar
     r_trace_tab_current = rTraceStar
-    x_trace_tab_current = xTraceStar
     sim_liktab_current = sim_marg_lik_star
     prior_current = prior.star
   }
@@ -306,9 +298,11 @@ for (m in 1:MCMC.runs){
     print(c(iiM,"m"=m,  
             "acc"=signif(accept_rate,3), 
             "lik"=signif(sim_liktab_current,3),
+            epsilon0,
             signif(thetaAlltab_current[1,'beta_h'],3),
             thetaAlltab_current[1,'intro_mid'],
-            thetaAlltab_current[1,'rep']),
+            thetaAlltab_current[1,'rep'],
+            thetaAlltab_current[1,'chi']),
             digits = 2)
   save(sim_liktab,
             prior,
@@ -317,7 +311,6 @@ for (m in 1:MCMC.runs){
             cd_trace_tab,
             s_trace_tab,
             r_trace_tab,
-            x_trace_tab,
             thetatab,
             thetaAlltab,
             theta_initAlltab,
