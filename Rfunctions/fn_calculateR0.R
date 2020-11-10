@@ -14,29 +14,24 @@ calculate_r0 <- function(th_in,sus_c=1,sus_a=1,sm_c=1,sm_a=1,b_vary=1,control=1)
   b_hh = 0
   
   # Rate vectors get infected
-  b_vh = th_in$beta_v * b_hv
+  b_vh = 0
   b_vv = 0
   
-  rr_hh=rep(0,length(b_vary)); 
-  rr_vv = rr_hh;
+  rr_hh <- rep(0,length(b_vary)); 
+  rr_vv <- rr_hh;
   
-  delta_v <- th_in$MuV 
-  exp_v <- th_in$Vex
   exp_h <- th_in$Exp
   inf_p <- th_in$Inf.
   
-  tau <- th_in$tau
-  m <- th_in$m
+  rr_hh = (sus_c*b_hv/(exp_h + inf_p))
+  rr_vv = rr_hh
+  rr_hv = rr_hh
+  rr_vc = rr_hh
   
-  rr_hh=rep(0,length(b_vary)); 
-  rr_vv = rr_hh;
-  rr_hv = (sus_c*b_hv/delta_v)*(exp_v/(delta_v+exp_v))
-  rr_vc = (sm_c*b_vh/inf_p)
-  
-  r0_hh=rep(0,length(b_vary)); 
-  r0_vv = rr_hh;
-  r0_hv = (b_hv/delta_v)*(exp_v/(delta_v+exp_v))
-  r0_vc = (b_vh/inf_p)
+  r0_hh = b_hv/(exp_h + inf_p)
+  r0_vv = rr_hh
+  r0_hv = rr_hh
+  r0_vc = rr_hh
   
   rr_post = NULL
   r0_post = NULL
