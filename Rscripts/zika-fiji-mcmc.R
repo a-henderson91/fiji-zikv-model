@@ -70,6 +70,7 @@ list2env(data,globalenv())
 setup <- results_set_up(iiH, parameter_est_file = "parameters_est")
   list2env(setup, globalenv())
   setup$thetaAlltab[1,,]
+  setup$thetatab[1,]
 # Set up Priors  ----------------------------------------------------------
 ## Estimate prior distribution for ZIKV intro time from BEAST output
 source(here::here("Rscripts/load_tmrca_calc_prior.R"))
@@ -131,7 +132,7 @@ dev.copy(pdf, here::here("output/fig_supp_introFn.pdf"), 6,4)
   
 # Print starting conditions for model run --------------------------
 print("Theta initial starting conditions")
-thetaAlltab[1,iiH,]
+c(thetatab[1,], thetaAlltab[1,iiH,])
 diag(cov_matrix_thetaAll)
 
 # Run MCMC loop and save results ------------------------------------------

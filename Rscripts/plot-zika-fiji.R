@@ -135,6 +135,7 @@ dev.copy(pdf, paste0("output/fig1B_caseData_",virus,".pdf"), width = 6, height =
 # Fig 2 model trajectories ---------------------------------------------
 tMax <- dim(c_trace_tab)[2]
 btsp <- 1000
+svector <- matrix(NA,nrow=btsp,ncol=tMax)
 cvector <- matrix(NA,nrow=btsp,ncol=tMax)
 ivector <- matrix(NA,nrow=btsp,ncol=tMax)
 rvector <- matrix(NA,nrow=btsp,ncol=tMax)
@@ -149,10 +150,11 @@ for(ii in 1:btsp){
   }else{
     epsilon=0
   }
-  cvector[ii,]=ReportC(c_trace_tab[pick,1:tMax],thetatab[pick,'rep'],thetatab[pick,'repvol'])
-  ivector[ii,]=c_trace_tab[pick,1:tMax]
-  rvector[ii,]=(r_trace_tab[pick,1:tMax]/thetatab[pick,]$npop) + ((1- (r_trace_tab[pick,1:tMax]/thetatab[pick,]$npop))*epsilon)
-  introvector[ii,]=sapply(time.vals[1:tMax], function(xx){intro_f(xx, mid = thetatab[pick,'intro_mid'], width = thetatab[pick,'intro_width'], base = thetatab[pick,'intro_base'])})
+  cvector[ii,] <- ReportC(c_trace_tab[pick,1:tMax],thetatab[pick,'rep'],thetatab[pick,'repvol'])
+  svector[ii,] <- s_trace_tab[pick,1:tMax]
+  ivector[ii,] <- c_trace_tab[pick,1:tMax]
+  rvector[ii,] <- (r_trace_tab[pick,1:tMax]/thetatab[pick,]$npop) + ((1- (r_trace_tab[pick,1:tMax]/thetatab[pick,]$npop))*epsilon)
+  introvector[ii,] <- sapply(time.vals[1:tMax], function(xx){intro_f(xx, mid = thetatab[pick,'intro_mid'], width = thetatab[pick,'intro_width'], base = thetatab[pick,'intro_base'])})
 }
 ## plot posterior of cases
 tMaxDenv <- length(load_DENVfit_1$c_trace_tab[1,])
@@ -183,13 +185,17 @@ ci_inf1 <- apply(ivector,2,function(x){quantile(x,0.025, na.rm=T)})
 ci_inf2 <- apply(ivector,2,function(x){quantile(x,0.975, na.rm=T)})
 ci_inf150 <- apply(ivector,2,function(x){quantile(x,0.25, na.rm=T)})
 ci_inf250 <- apply(ivector,2,function(x){quantile(x,0.75, na.rm=T)})
+# susceptible dynamics
+medS <- apply(svector,2,function(x){median(x, na.rm=T)})
+ciS1 <- apply(svector,2,function(x){quantile(x,0.025, na.rm=T)})
+ciS2 <- apply(svector,2,function(x){quantile(x,0.975, na.rm=T)})
 # intro dynamics
 med_intro <- apply(introvector,2,function(x){median(x, na.rm=T)})
 ci_intro1 <- apply(introvector,2,function(x){quantile(x,0.025, na.rm=T)})
 ci_intro2 <- apply(introvector,2,function(x){quantile(x,0.975, na.rm=T)})
 
 # Fig 2A - infections and cases ---------------------------------------------
-par(mfrow=c(3,1))
+par(mfrow=c(2,2))
 par(mgp=c(2,0.7,0),mar = c(3,4,1.2,4))
 #
 y.vals.plot <- y.vals[1:tMax]
@@ -281,7 +287,34 @@ lines(c(dataframe.sero$seroposdates[3],dataframe.sero$seroposdates[3]),
 grid(NA,NULL, lty = 1, col = colgrid) 
 mtext("B",side=3, adj=0, font=2)
 
-# Fig 2C - Reproduction numbers ---------------------------------------------
+# Fig 2C - S and I dynamics ---------------------------------------------
+data.frame2c <- tibble(
+  "date.vals" = date.vals[1:tMax], 
+  medS, ciS1, ciS2,
+  med_Inf, ci_inf1, ci_inf2
+) %>%
+  mutate_at(c("med_Inf", "ci_inf1", "ci_inf2"), ~ifelse(.<=1,0,log(.)))
+
+plot(data.frame2c$date.vals, data.frame2c$ciS2, col=0, ylab="", yaxt="n", xlab="Date", bty="n", xaxt="n",
+     ylim = c(0, max(data.frame2c$ciS2)))
+axis.Date(1, at=seq(min(plot_fig2A$dates), max(plot_fig2A$dates), by="3 months"), 
+          labels=format(seq(min(plot_fig2A$dates), max(plot_fig2A$dates), by="3 months"),"%b-%y"), las=1)
+lines(data.frame2c$date.vals, data.frame2c$medS, col=col2, lwd = 2)
+polygon(c(data.frame2c$date.vals, rev(data.frame2c$date.vals)), 
+        c(data.frame2c$ciS1,rev(data.frame2c$ciS2)), lty=0, col=col2a)
+axis(side=2, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
+mtext("Number susceptible", side=2, line=2, col=col2)
+par(new = T)
+plot(data.frame2c$date.vals, data.frame2c$med_Inf, col=0, lwd = 0, bty = "n", xaxt = "n", yaxt = "n", ylab = "", xlab = "")
+lines(data.frame2c$date.vals, data.frame2c$med_Inf, col=col1, lwd = 2)
+polygon(c(data.frame2c$date.vals, rev(data.frame2c$date.vals)), 
+        c(data.frame2c$ci_inf1,rev(data.frame2c$ci_inf2)), lty=0, col=col1a)
+axis(side=4, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
+mtext("(log) Number infected", side=4, line=2, col=col1)
+grid(NA,NULL, lty = 1, col = colgrid) 
+mtext("C",side=3, adj=0, font=2)
+
+# Fig 2D - Reproduction numbers ---------------------------------------------
 plotCosRR <- NULL
 plotCosR0 <- NULL
 plotDecline <- NULL
@@ -343,9 +376,9 @@ polygon(c(dataframe.p3$date.vals,rev(dataframe.p3$date.vals)),
         c(dataframe.p3$lciR0,rev(dataframe.p3$uciR0)),lty=0,col=col2a)
 axis(side=2, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
 mtext("Reproduction number", side=2, col=1, line=2, cex=1)
-lines(dataframe.p3$date.vals, dataframe.p3$medRR, col=col6)
+lines(dataframe.p3$date.vals, dataframe.p3$medRR, col=col7)
 polygon(c(dataframe.p3$date.vals,rev(dataframe.p3$date.vals)),
-        c(dataframe.p3$lciRR,rev(dataframe.p3$uciRR)),lty=0,col=col6a)
+        c(dataframe.p3$lciRR,rev(dataframe.p3$uciRR)),lty=0,col=col7a)
 abline(h=1, lty=2)    
 par(new=T)
 plot(dataframe.p3$date.vals, dataframe.p3$temp, type='l', col=rgb(0,0,0.1,alpha=0.4), bty="n", 
@@ -353,10 +386,10 @@ plot(dataframe.p3$date.vals, dataframe.p3$temp, type='l', col=rgb(0,0,0.1,alpha=
 axis(side=4, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
 mtext("Average temperature", side=4, col=1, line=2)
 grid(NA,NULL, lty = 1, col = colgrid) 
-mtext("C",side=3, adj=0, font=2)
+mtext("D",side=3, adj=0, font=2)
 
 # Fig 2 - save ------------------------------------------------------------
-dev.copy(pdf, "output/fig2_modelOutputs_wide3.pdf", 7, 5)
+dev.copy(pdf, "output/fig2_modelOutputs.pdf", 7, 7)
   dev.off()
 
 # Figure 3 - introduction dynamics ----------------------------------------

@@ -37,16 +37,17 @@ pacman::p_load(coda,
                truncnorm)
 library(here)
 clust1 <- registerDoMC(4)  #change to your number of CPU cores
+
 # model run options to change ---------------------------------------------
 seasonal.transmission   <- T # whether to estimate seasonal transmission or not. If false - zeroes BETA_V_AMP after estimation in main script
 include.sero.likelihood <- T # whether to include serological data in likelihood
 vector.control          <- T # whether to reduce transmission in March2014 when vector control campaign was in effect 
 include.2014.control    <- T # if False then beta_base set to 0
-run.name <- "1110_zikvmodel" 
+run.name <- "temp" 
 model1_name <- "1110_model1"
   
 ## MCMC parameters 
-MCMC.runs <- 50000 #number of MCMC iterations 
+MCMC.runs <- 500 #number of MCMC iterations 
 thinning.parameter <- 1
 multichain <- c(1:3)  # n chains to run in parallel
 mcmc.burn <- 0.4
