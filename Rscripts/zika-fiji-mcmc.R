@@ -107,7 +107,6 @@ dev.copy(pdf, here::here("output/fig_supp_controlFn.pdf"), 6,4)
 source(here::here("Rscripts/zika-single-simulation.R"))
 initial_beta_h <- thetaAlltab[1,iiH,][["beta_h"]]
 zika_single_sim(initial_beta_h)
-zika_single_sim(0.25)
 if(zika_single_sim(initial_beta_h)==-Inf){
   t_rate <- seq(0.2, 0.5, 0.01)
   lik_search <- sapply(t_rate, function(xx){zika_single_sim(xx)})
@@ -140,6 +139,7 @@ diag(cov_matrix_thetaAll)
 
 m = 1; iiM=1
 foreach(iiM=multichain) %dopar% {  # Loop over regions with parallel MCMC chains
+ 
 
 adapt_size_start <- round(0.1*MCMC.runs)
 
@@ -167,10 +167,10 @@ for (m in 1:MCMC.runs){
     # initialise counter for storing results (m/thining parameter)
     j=1
   }else{
-    scaling.multiplier <- exp((1-1e-7)^(m-adapt_size_start)*(accept_rate-0.234))
+    scaling.multiplier <- exp((0.99)^(m-adapt_size_start)*(accept_rate-0.234))
     epsilon0 <- epsilon0 * scaling.multiplier
-    epsilon0 <- min(epsilon0, 0.5)
-    epsilon0 <- max(epsilon0, 1e-15)
+    #epsilon0 <- min(epsilon0, 0.5)
+    #epsilon0 <- max(epsilon0, 1e-15)
     
     cov_matrix_theta=epsilon0*cov_matrix_theta0
     cov_matrix_thetaA=epsilon0*cov_matrix_thetaAll
