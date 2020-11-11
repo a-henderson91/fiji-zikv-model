@@ -4,7 +4,7 @@
 # github.com/a-henderson91/fiji-zikv-model
 # - - - - - - - - - - - - - - - - - - - - - - - 
 
-virus <- "DEN3"  # DEN3 or ZIKV
+virus <- "ZIKV"  # DEN3 or ZIKV
 
 output_simulations <- F
 output_diagnostics <- T
@@ -196,9 +196,9 @@ y.vals.plot <- y.vals[1:tMax]
 y.vals.plot[y.vals.plot==0] <- NA
 dataframe.p1 <- data.table(date.vals=date.vals, y.vals.plot, medP, ciP1, ciP2, ciP150, ciP250, 
                            medP_R, ciP1_R, ciP2_R, ciR150, ciR250,
-                           medD = c(medD, rep(NA, tMax+1-tMaxDenv)), 
-                           ciD1 = c(ciD1, rep(NA, tMax+1-tMaxDenv)), 
-                           ciD2 = c(ciD2, rep(NA, tMax+1-tMaxDenv)))
+                           medD = c(medD, rep(0, tMax+1-tMaxDenv)), 
+                           ciD1 = c(ciD1, rep(0, tMax+1-tMaxDenv)), 
+                           ciD2 = c(ciD2, rep(0, tMax+1-tMaxDenv)))
 plot_fig2A <- DFdenv[dataframe.p1, on=.(dates = date.vals), roll=-Inf]
 
 if(virus == "ZIKV"){tt = "h"}else{tt = "l"}
@@ -620,6 +620,7 @@ param1 <- cbind(
   c.text.date(zika_intro[picks], 2),
   c.text(4 * intro_width[picks] * intro_base[picks], 4),
   c.text(intro_width[picks], 4),
+  c.text(intro_base[picks], 4),
   max(sim_liktab),
   dic.calc
 )
@@ -636,7 +637,7 @@ colnames(param1)=c(
   "Test specificity", 
   "Waning Zika immunity",
   "base","grad",'mid',
-  "Zika introduction date (mid)", "Number introduced", "Width introduced",
+  "Zika introduction date (mid)", "Number introduced", "Width introduced","Peak introduced",
   "max Likelihood",
   "DIC")
 t(param1)
