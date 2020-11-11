@@ -40,8 +40,8 @@ seasonal.transmission   <- T # whether to estimate seasonal transmission or not.
 include.sero.likelihood <- T # whether to include serological data in likelihood
 vector.control          <- T # whether to reduce transmission in March2014 when vector control campaign was in effect 
 include.2014.control    <- T # if False then beta_base set to 0
-run.name <- "0820-2014acceptanceStep" 
-model1_name <- "01109_model1"
+run.name <- "1110_modelZIKV" 
+model1_name <- "1110_model1"
   
 ## MCMC parameters 
 MCMC.runs <- 20000 #number of MCMC iterations 
