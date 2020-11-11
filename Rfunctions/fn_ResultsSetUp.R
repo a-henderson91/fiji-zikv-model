@@ -5,7 +5,7 @@
 #' @param parameter_est_file Name of csv file with parameters to be estimated included
 #' @export
 #parameter_est_file="parameters_est_denv3"
-results_set_up <- function(s, parameter_est_file){
+results_set_up <- function(iiH, parameter_est_file){
   # Set up vectors for storing their values during MCMC loop
   thetaAll=data.frame(rep(NA,locnn))
   for (i in 1:(length(thetaR_IC_local$param)-1)){
@@ -26,11 +26,10 @@ results_set_up <- function(s, parameter_est_file){
 # Loop to load data for specific location & set initial conditions
 for(iiH in itertab){
   ##  Global parameters
-  c1=(names(thetaR_IC_local) == locationtab[iiH])
   
   theta <- NULL
   for (i in thetaR_IC_global$param){
-    theta <- c(theta, thetaR_IC_global[thetaR_IC_global$param==i, c1])  
+    theta <- c(theta, thetaR_IC_global[thetaR_IC_global$param==i, 2])   
   }
   names(theta) <- thetaR_IC_global$param
   
@@ -38,6 +37,7 @@ for(iiH in itertab){
   popsize <- theta["npop"]
   
   ## Local parameters
+  c1=(names(thetaR_IC_local) == locationtab[iiH])
   for (i in thetaR_IC_local$param){
     thetaAll[iiH, names(thetaAll)==i] <- thetaR_IC_local[thetaR_IC_local$param==i, c1] 
   }

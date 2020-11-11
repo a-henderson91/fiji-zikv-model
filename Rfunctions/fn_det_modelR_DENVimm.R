@@ -35,6 +35,12 @@ Deterministic_modelR_final_DENVimmmunity <- function(theta, theta_init, location
     if(!is.na(theta[['chi']])){
       theta[["chi"]] <- theta[['chi']]}else{
         theta[["chi"]] <- 0}
+    if(!is.na(theta[['mu']])){
+      theta[["mu"]] <- 1/(theta[['mu']]*365.25)
+      theta[["eta"]] <- theta[['mu']]*2.5
+      }else{
+        theta[["eta"]] <- 0
+        theta[["mu"]] <- 0}
 
     # Output simulation data
     output <- zikv_model_ode(theta, init1, time.vals.sim)

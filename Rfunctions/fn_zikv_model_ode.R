@@ -9,10 +9,12 @@
 zikv_model_ode <- function(theta, init.state, time.vals.sim) {
   SIR_ode <- function(time, state, theta) {
     ## extract parameters from theta
-    Nsize <-   theta[["npop"]]
+    Nsize <-  theta[["npop"]]
     rho <- theta[['rho']]
     omega_d <- theta[['omega_d']]
     chi <- theta[['chi']]
+    eta <- theta[['eta']]
+    mu <- theta[['mu']]
       
       beta_d <- theta[['beta_d']]
       alpha_d <- theta[['alpha_d']]
@@ -48,10 +50,11 @@ zikv_model_ode <- function(theta, init.state, time.vals.sim) {
       initDenv <- intro_f(time, mid = theta[["denv_start_point"]], width = 0.25, base = 160) ## fixed so that approx ~160 introduction happen on 2013-10-27
       
       # Human population
-      dS  =  - S*(lambda_h*I/Nsize)*Ipos - chi*Sd*(beta_d*Id/Nsize) + chi*(2*omega_d*T2d) 
-      dE  =  S*(lambda_h*I/Nsize)*Ipos - alpha_h*E  
-      dI  = alpha_h*E  - gamma*I + intro_zikv
-      dR  = gamma*I - rho*R
+      Npop = S + E + I + R
+      dS  =  eta*Npop - S*(lambda_h*I/Nsize)*Ipos - chi*Sd*(beta_d*Id/Nsize) + chi*(2*omega_d*T2d) - mu*S
+      dE  =  S*(lambda_h*I/Nsize)*Ipos - alpha_h*E - mu*E
+      dI  = alpha_h*E  - gamma*I + intro_zikv - mu*I
+      dR  = gamma*I - rho*R - mu*R
       dC  = alpha_h*E
       
       # Denv infection and temporary immunity

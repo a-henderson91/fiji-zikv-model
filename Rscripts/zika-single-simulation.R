@@ -43,6 +43,13 @@ zika_single_sim <- function(transmission_rate){
   if(!is.na(theta[['chi']])){
     theta[["chi"]] <- theta[['chi']]}else{
       theta[["chi"]] <- 0}
+  if(!is.na(theta[['mu']])){
+    theta[["mu"]] <- 1/(theta[['mu']]*365.25)
+    theta[["eta"]] <- theta[['mu']]*2.5
+  }else{
+    theta[["eta"]] <- 0
+    theta[["mu"]] <- 0}
+  
   # Run simulation ----------------------------------------------------------
   output <- zikv_model_ode(theta, init1, time.vals.sim=time.vals)
   
@@ -133,5 +140,4 @@ zika_single_sim <- function(transmission_rate){
   return(likelihood)
 }
 
-zika_single_sim(0.33)
 zika_single_sim(0.27)

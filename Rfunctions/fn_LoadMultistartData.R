@@ -63,7 +63,7 @@ load.data.multistart <- function(Virus, add.nulls=0, startdate, serology.file.na
                 )
   
   ## Load initial parameter values
-  thetaR_IC_global <- read.csv(paste0("data/",init.values.file.name,"_global.csv"),stringsAsFactors=FALSE)
+  thetaR_IC_global <- read.csv(paste0("data/thetaR_IC_global.csv"),stringsAsFactors=FALSE)
   thetaR_IC_local <- read.csv(paste0("data/",init.values.file.name,"_local.csv"),stringsAsFactors=FALSE)
   
   ## Set prior distribution parameters 
