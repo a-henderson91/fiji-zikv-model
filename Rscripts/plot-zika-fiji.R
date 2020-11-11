@@ -202,6 +202,7 @@ y.vals.plot <- y.vals[1:tMax]
 y.vals.plot[y.vals.plot==0] <- NA
 dataframe.p1 <- data.table(date.vals=date.vals, y.vals.plot, medP, ciP1, ciP2, ciP150, ciP250, 
                            medP_R, ciP1_R, ciP2_R, ciR150, ciR250,
+                           med_intro, ci_intro1, ci_intro2,
                            medD = c(medD, rep(0, tMax+1-tMaxDenv)), 
                            ciD1 = c(ciD1, rep(0, tMax+1-tMaxDenv)), 
                            ciD2 = c(ciD2, rep(0, tMax+1-tMaxDenv)))
@@ -508,7 +509,7 @@ if(output_diagnostics==T){
   labelN=1
   iiH=1
   parameters_to_estimate <- c(names(thetatab)[diag(var(thetatab))!=0 & !is.na(diag(var(thetatab)))])
-  parameters_names <- str_replace(parameters_to_estimate, 
+  parameters_names <- stringr::str_replace(parameters_to_estimate, 
                                   pattern = c("r0",
                                               "beta_h",
                                               "beta_v",

@@ -168,7 +168,7 @@ for (m in 1:MCMC.runs){
     # initialise counter for storing results (m/thining parameter)
     j=1
   }else{
-    scaling.multiplier <- exp((0.99)^(m-adapt_size_start)*(accept_rate-0.234))
+    scaling.multiplier <- exp((0.9)^(m-adapt_size_start)*(accept_rate-0.234))
     epsilon0 <- epsilon0 * scaling.multiplier
     #epsilon0 <- min(epsilon0, 0.5)
     #epsilon0 <- max(epsilon0, 1e-15)
@@ -302,8 +302,7 @@ for (m in 1:MCMC.runs){
             epsilon0,
             signif(thetaAlltab_current[1,'beta_h'],3),
             thetaAlltab_current[1,'intro_mid'],
-            thetaAlltab_current[1,'rep'],
-            thetaAlltab_current[1,'chi']),
+            thetaAlltab_current[1,'rep']),
             digits = 2)
   save(sim_liktab,
             prior,
