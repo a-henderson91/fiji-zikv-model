@@ -7,16 +7,10 @@
 # thetaAlltab=thetaAlltab_current[iiH,];  thetaAllstar=thetaA_star; covartheta = cov_matrix_thetaA
 ComputePrior <- function(iiH, thetaAlltab, thetaAllstar, covartheta){
   # Compute prior of proposed parameter set theta
-  p_theta_star =  priorInf(1/thetaAllstar["Inf"])*
-                  priorExp(1/thetaAllstar["Exp"])*
-                  priorVEx(1/thetaAllstar["Vex"])*
-                  priorMuV(1/thetaAllstar["MuV"])*
-                  priorChi(thetaAllstar["chi"])*
+  p_theta_star =  priorChi(thetaAllstar["chi"])*
                   priorepsilon(thetaAllstar["epsilon"])*
                   priorBeta(thetaAllstar["beta_h"])*
-                  priorBetaV(thetaAllstar["beta_v"])*
                   priorInitInf(thetaAllstar["intro_base"])*
-                  priorInitWidth(thetaAllstar["intro_width"])*
                   priorIntro(thetaAllstar["intro_mid"])
 
   # If vector control is included in the model - include prior density of proposed
@@ -32,16 +26,10 @@ ComputePrior <- function(iiH, thetaAlltab, thetaAllstar, covartheta){
       priorBeta_mid(thetaAllstar["beta_v_mid"])
   }
   # Compute prior of current parameter set theta
-  p_theta = priorInf(1/thetaAlltab["Inf"])*
-            priorExp(1/thetaAlltab["Exp"])*
-            priorVEx(1/thetaAlltab["Vex"])*
-            priorMuV(1/thetaAlltab["MuV"])*
-            priorChi(thetaAlltab["chi"])*
+  p_theta = priorChi(thetaAlltab["chi"])*
             priorepsilon(thetaAlltab["epsilon"])*
             priorBeta(thetaAlltab["beta_h"])*
-            priorBetaV(thetaAlltab["beta_v"])*
             priorInitInf(thetaAlltab["intro_base"])*
-            priorInitWidth(thetaAlltab["intro_width"])*
             priorIntro(thetaAlltab["intro_mid"])
 
   # If vector control is included in the model - include prior density of proposed

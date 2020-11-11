@@ -26,13 +26,11 @@ priorOmega <- function(x){dtruncnorm(x,a=1, b=Inf, mean=90, sd=10)}
 priorRec0  <- function(x){dbinom(round(x*nPOP[1]), size=nPOP[1], prob=nLUM[1]/nPOP[1])} 
 
 priorBeta <- function(x){dunif(x, min = 0, max = 1)} 
-priorBetaV <- function(x){dunif(x, min = 0, max = 1e5)} 
 
 priorIntro <- function(x){dnorm(x, mean=intro_prior_mu, sd=intro_prior_sigma)} ## from 'Export start time Central Division.R'
-#priorIntro <- function(x){dunif(x, min=0, max=150)} 
 
-priorInitInf <- function(x){dunif(x, min=0, max=6)}
-priorInitWidth <- function(x){dunif(x, min=0, max=50)}
+priorInitInf <- function(x){dunif(x, min=0, max=25)}
+#priorInitWidth <- function(x){dunif(x, min=0, max=50)} ## removed estimate of width
 
 priorChi<-function(x){dunif(x,min=0,max=1)} 
 priorepsilon <- function(x){dunif(x, min=0, max=1)}
