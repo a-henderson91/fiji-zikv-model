@@ -2,5 +2,4 @@ parameters_est,compartments_est
 beta_h,
 beta_base,
 rec0,
-beta_width,
 rep,
