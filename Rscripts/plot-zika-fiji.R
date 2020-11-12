@@ -306,8 +306,7 @@ polygon(c(data.frame2c$date.vals, rev(data.frame2c$date.vals)),
 axis(side=2, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
 mtext("Number susceptible", side=2, line=2, col=col2)
 par(new = T)
-plot(data.frame2c$date.vals, data.frame2c$med_Inf, col=0, lwd = 0, bty = "n", xaxt = "n", yaxt = "n", ylab = "", xlab = "")
-lines(data.frame2c$date.vals, data.frame2c$med_Inf, col=col1, lwd = 2)
+plot(data.frame2c$date.vals, data.frame2c$med_Inf, col=col1, lwd = 2, type = "l", bty = "n", xaxt = "n", yaxt = "n", ylab = "", xlab = "")
 polygon(c(data.frame2c$date.vals, rev(data.frame2c$date.vals)), 
         c(data.frame2c$ci_inf1,rev(data.frame2c$ci_inf2)), lty=0, col=col1a)
 axis(side=4, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
@@ -390,7 +389,7 @@ grid(NA,NULL, lty = 1, col = colgrid)
 mtext("D",side=3, adj=0, font=2)
 
 # Fig 2 - save ------------------------------------------------------------
-dev.copy(pdf, "output/fig2_modelOutputs.pdf", 7, 7)
+dev.copy(pdf, "output/fig2_modelOutputs.pdf", 7, 4)
   dev.off()
 
 # Figure 3 - introduction dynamics ----------------------------------------

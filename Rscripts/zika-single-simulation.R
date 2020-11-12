@@ -9,7 +9,7 @@ zika_single_sim <- function(transmission_rate){
   zika_data$date <- as.Date(zika_data$date)
   
   # Change parameter values -------------------------------------------------
-  par(mfrow=c(2,1), mar = c(3,4,1,3))
+  par(mfrow=c(3,1), mar = c(3,4,1,3))
   
   theta <- c(thetatab[1,],thetaAlltab[1,iiH,], theta_denv)
   theta_init <- theta_initAlltab[1,iiH,]
@@ -118,12 +118,12 @@ zika_single_sim <- function(transmission_rate){
                                                  size=1/theta[["repvol"]]))) 
   
   # Plot simulation ---------------------------------------------------------
-  plot(date.vals, casecount, type='l', col=2, xlab="Year", ylab="Infections (cases)",ylim=c(0,2e4),
+  plot(date.vals, casecount, type='l', col=4, lwd = 2, xlab="Year", ylab="Infections (cases)",ylim = c(0, 15000),
        main=paste0("Start: ", startdate+theta[["intro_mid"]],"   |   lik:", signif(likelihood,4),"  |  medR0: ", signif(median(r0_post),3), " | intro:", round(total_intro,0)))
-  points(date.vals, c(denv_data$y.vals, rep(NA, 112)), col = "gray60")
-  lines(date.vals,casecountD*0.1)
+  #points(date.vals, c(denv_data$y.vals, rep(NA, 112)), col = "gray60")
+  lines(date.vals,casecountD)
   par(new=T)
-  plot(date.vals, y.vals, type='h', col=4, yaxt='n', xaxt='n', xlab="", ylab="", ylim=c(0,5))
+  plot(date.vals, y.vals, type='h', col=4, yaxt='n', xaxt='n', xlab="", ylab="", ylim=c(0,10))
   lines(date.vals,sapply(time.vals, function(xx){intro_f(xx, mid = theta[["zika_start_point"]], width = theta[["intro_width"]], base = theta[["intro_base"]])}),
         type='l',col = 3, yaxt='n', xaxt='n', xlab="", ylab="")
   axis(side=4)
@@ -137,7 +137,10 @@ zika_single_sim <- function(transmission_rate){
   points(seroposdates, (nLUM/nPOP), col=4, pch=1)
   axis(side=4)
   
+  # plot susceptibles
+  plot(date.vals, I_traj, col = 8, type = "l")
+  par(new=T)
+  plot(date.vals, (S_traj/342000), type='l', col=6, yaxt='n', xaxt='n', xlab="", ylab="", ylim=c(0,1.5))
+  axis(side =4)
   return(likelihood)
 }
-
-zika_single_sim(0.27)

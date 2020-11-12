@@ -71,18 +71,25 @@ setup <- results_set_up(iiH, parameter_est_file = "parameters_est")
   list2env(setup, globalenv())
   setup$thetaAlltab[1,,]
   setup$thetatab[1,]
+  setup$cov_matrix_theta0
 # Set up Priors  ----------------------------------------------------------
 ## Estimate prior distribution for ZIKV intro time from BEAST output
 source(here::here("Rscripts/load_tmrca_calc_prior.R"))
 intro_prior_mu;intro_prior_sigma
 source(here::here("Rscripts/prior_distributions.R"))
 
+if(limit.to.2013 == T){
+  priorIntro <- function(x){dunif(x, min = 1, max = 365)}
+  thetaAlltab[1,iiH,'intro_mid']  <- 120
+  thetaAlltab[1,iiH,'intro_base']  <- 10
+}
+
 # Set initial values to posterior means form denvlike fit -----------------
 thetaAlltab[1,iiH,'beta_v_amp'] <- denv3_2014_esimates$beta_v_amp ## seasonality parameters estimated during DENV3-2014 fitting
 thetaAlltab[1,iiH,'beta_v_mid'] <- denv3_2014_esimates$beta_v_mid ## seasonality parameters estimated during DENV3-2014 fitting
 thetaAlltab[1,iiH,'beta_grad'] <- denv3_2014_esimates$beta_grad
 thetaAlltab[1,iiH,'beta_mid'] <- denv3_2014_esimates$beta_mid
-thetaAlltab[1,iiH,'beta_width'] <- denv3_2014_esimates$beta_width
+thetaAlltab[1,iiH,'beta_width'] <- 20 #denv3_2014_esimates$beta_width
 
 if(include.2014.control == T){
   thetaAlltab[1,iiH,'beta_base'] <- denv3_2014_esimates$beta_base
@@ -107,24 +114,27 @@ dev.copy(pdf, here::here("output/fig_supp_controlFn.pdf"), 6,4)
 # run a single simulation with initial values -----------------------------
 source(here::here("Rscripts/zika-single-simulation.R"))
 initial_beta_h <- thetaAlltab[1,iiH,][["beta_h"]]
-zika_single_sim(initial_beta_h)
+zika_single_sim(0.25)
 if(zika_single_sim(initial_beta_h)==-Inf){
-  t_rate <- seq(0.2, 0.5, 0.01)
-  lik_search <- sapply(t_rate, function(xx){zika_single_sim(xx)})
-  max_beta_h <- t_rate[which(lik_search==max(lik_search))]
-  thetaAlltab[1,iiH,"beta_h"] <- max_beta_h[1]
-zika_single_sim(max_beta_h[1])
+  t_rate <- seq(0.2, 0.3, 0.02)
+    lik_search <- sapply(t_rate, function(xx){zika_single_sim(xx)})
+    max_beta_h <- t_rate[which(lik_search==max(lik_search))]
+    thetaAlltab[1,iiH,"beta_h"] <- max_beta_h[1]
+  zika_single_sim(max_beta_h[1])
+}
+if(zika_single_sim(thetaAlltab[1,iiH,][["beta_h"]])==-Inf){
+  stop("Starting with infinite likelihood - this won't end well!")
 }
 
 ## Plot "introduction function" with initial starting values
 intro_plot_vals <- as.data.frame(t(thetaAlltab[1,iiH,]))
 intro_plot <- sapply(time.vals, function(xx){intro_f(xx, 
-                                                         mid=control_plot_vals$beta_mid,
-                                                         width=control_plot_vals$beta_width,
-                                                         base=control_plot_vals$intro_base
+                                                      mid=intro_plot_vals$intro_mid,
+                                                      width=intro_plot_vals$intro_width,
+                                                      base=intro_plot_vals$intro_base
 )})
-plot(date.vals[20:90], intro_plot[20:90], type="l", ylim=c(0,1), bty="n", ylab="ZIKV introductions", xlab="Date", xaxt="n")
-axis.Date(side=1, at=seq.Date(date.vals[20], date.vals[90], by = "1 months"), "months", format = "%b%y")
+plot(date.vals[1:100], intro_plot[1:100], type="l", bty="n", ylab="ZIKV introductions", xlab="Date", xaxt="n")
+axis.Date(side=1, at=seq.Date(date.vals[1], date.vals[100], by = "1 months"), "months", format = "%b%y")
 integrate(intro_f, -Inf, Inf)
 
 dev.copy(pdf, here::here("output/fig_supp_introFn.pdf"), 6,4)
@@ -168,7 +178,7 @@ for (m in 1:MCMC.runs){
     # initialise counter for storing results (m/thining parameter)
     j=1
   }else{
-    scaling.multiplier <- exp((0.9)^(m-adapt_size_start)*(accept_rate-0.234))
+    scaling.multiplier <- exp((0.99)^(m-adapt_size_start)*(accept_rate-0.234))
     epsilon0 <- epsilon0 * scaling.multiplier
     #epsilon0 <- min(epsilon0, 0.5)
     #epsilon0 <- max(epsilon0, 1e-15)

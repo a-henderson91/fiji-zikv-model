@@ -3,7 +3,7 @@ beta_h,0.25,0.25
 beta_v_amp,0.1,0.1
 beta_v_mid,0.99,0.99
 rep,0.01,0.001
-repvol,0.1,1
+repvol,0.1,0.1
 inf0,200,0
 rec0,0.331,0
 Exp,6.1,6.1
@@ -15,7 +15,7 @@ beta_width,14,NA
 chi,NA,0.3
 omega_d,NA,30
 epsilon,NA,0.001
-rho,NA,400
+rho,NA,450
 intro_mid,0,600
-intro_base,0,1
+intro_base,0,2
 intro_width,0,10

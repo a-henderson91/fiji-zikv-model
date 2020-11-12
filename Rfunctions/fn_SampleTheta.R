@@ -4,6 +4,7 @@
 
 #theta_in=thetaAlltab_current[iiH,]; theta_init_in=theta_initAlltab_current[iiH,]; covartheta=0*cov_matrix_thetaA; covartheta_init=0*cov_matrix_theta_init; global=0
 #theta_in=thetaAlltab_current[iiH,]; theta_init_in=theta_initAlltab_current[iiH,]; covartheta=cov_matrix_thetaA; covartheta_init=cov_matrix_theta_init; global=0
+#theta_in=thetatab_current; theta_init_in=theta_initAlltab_current[iiH,]; covartheta=cov_matrix_theta; covartheta_init=cov_matrix_theta_init; global=1
 SampleTheta<-function(theta_in, theta_init_in, covartheta, covartheta_init, global=NULL){
   ## Parameters
     # sample new parameters from nearby using multivariate normal distribution:
