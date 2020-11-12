@@ -138,12 +138,12 @@ iiH <- 2
 source(here::here("Rscripts/den3-single-simulation.R"))
 initial_beta_h <- thetaAlltab[1,iiH,][["beta_h"]]
 denv3_single_sim(0.4)
-#if(denv3_single_sim(initial_beta_h) == -Inf){
+if(denv3_single_sim(initial_beta_h) == -Inf){
   t_rate <- seq(0.3, 0.8, 0.1)
   lik_search <- sapply(t_rate, function(xx){denv3_single_sim(xx)})
   max_beta_h <- t_rate[which(lik_search==max(lik_search))]
   thetaAlltab[1,iiH,"beta_h"] <- max_beta_h[1]
-#}
+}
 thetaAlltab[1,,]
 
 # Run MCMC loop and save results ------------------------------------------
@@ -174,10 +174,11 @@ adapt_size_start <- round(0.1*MCMC.runs)
       # initialise counter for storing results (m/thining parameter)
       j=1
     }else{
-      scaling.multiplier <- exp((1-1e-7)^(m-adapt_size_start)*(accept_rate-0.234))
+      scaling.multiplier <- exp((0.9)^(m-adapt_size_start)*(accept_rate-0.234))
       epsilon0 <- epsilon0 * scaling.multiplier
-      epsilon0 <- min(epsilon0, 0.5)
-      epsilon0 <- max(epsilon0, 1e-10)
+      #epsilon0 <- min(epsilon0, 0.5)
+      #epsilon0 <- max(epsilon0, 1e-15)
+      
       cov_matrix_theta=epsilon0*cov_matrix_theta0
       cov_matrix_thetaA=epsilon0*cov_matrix_thetaAll
       cov_matrix_theta_init=epsilon0*cov_matrix_theta_initAll
