@@ -42,7 +42,8 @@ load.data.multistart.month <- function(Virus, add.nulls=0, startdate, serology.f
              year = as.numeric(lubridate::year(date.vals))) %>%
       group_by(year, month) %>%
       summarise(date.vals = min(date.vals),
-                y.vals = sum(y.vals.full, na.rm = T)) 
+                y.vals = sum(y.vals.full, na.rm = T),
+                .groups = "drop") 
     new_data$time.vals <- as.numeric(new_data$date.vals-min(new_data$date.vals)) + (firstentry-1) * 30 # Shift by start date so both time series line up -- IMPORTANT FOR SEASONALITY
 
   ## Load serology data
