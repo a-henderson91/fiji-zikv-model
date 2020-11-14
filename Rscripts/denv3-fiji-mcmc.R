@@ -25,6 +25,7 @@ setup <- results_set_up(iiH, "parameters_est_denv3")
 theta_initAlltab[1,,]
 thetaAlltab[1,,]
 
+
 # Set up Priors  ----------------------------------------------------------
 source(here::here("Rscripts/prior_distributions.R"))
 
@@ -137,7 +138,7 @@ diag(cov_matrix_thetaAll)
 iiH <- 2
 source(here::here("Rscripts/den3-single-simulation.R"))
 initial_beta_h <- thetaAlltab[1,iiH,][["beta_h"]]
-denv3_single_sim(0.4)
+denv3_single_sim(initial_beta_h)
 if(denv3_single_sim(initial_beta_h) == -Inf){
   t_rate <- seq(0.3, 0.8, 0.1)
   lik_search <- sapply(t_rate, function(xx){denv3_single_sim(xx)})
@@ -145,6 +146,7 @@ if(denv3_single_sim(initial_beta_h) == -Inf){
   thetaAlltab[1,iiH,"beta_h"] <- max_beta_h[1]
 }
 thetaAlltab[1,,]
+diag(cov_matrix_thetaAll)
 
 # Run MCMC loop and save results ------------------------------------------
 (st.time <- Sys.time())
@@ -155,7 +157,7 @@ adapt_size_start <- round(0.1*MCMC.runs)
   for (m in 1:MCMC.runs){
     # Scale COV matrices for resampling using error term epsilon
     if(m==1){
-      epsilon0 = 0.0001
+      epsilon0 = 0.001
       cov_matrix_theta <- epsilon0*cov_matrix_theta0
       cov_matrix_thetaA <- epsilon0*cov_matrix_thetaAll
       cov_matrix_theta_init <- epsilon0*cov_matrix_theta_initAll
@@ -297,7 +299,7 @@ adapt_size_start <- round(0.1*MCMC.runs)
       prior_current = prior.star
     }
     
-    if(m<20){
+    if(m<adapt_size_start){
       accept_rate <- 0.234
     }
     

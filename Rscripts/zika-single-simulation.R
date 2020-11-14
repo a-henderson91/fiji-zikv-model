@@ -14,7 +14,6 @@ zika_single_sim <- function(transmission_rate){
   theta <- c(thetatab[1,],thetaAlltab[1,iiH,], theta_denv)
   theta_init <- theta_initAlltab[1,iiH,]
   
-  
   introductions_mid <- theta[["intro_mid"]]
   introductions_width <- theta[["intro_width"]]
   introductions_base <- theta[["intro_base"]]
@@ -82,7 +81,7 @@ zika_single_sim <- function(transmission_rate){
   r_pick = R_traj[1:tMax]/342000
   theta[["Inf."]] <- theta[["Inf"]]
   
-  output_rr <- calculate_r0(th_in=as.data.frame(t(theta)),sus_c=s_pick,sus_a=0,sm_c=0,sm_a=0,b_vary=b_vary,control=decline_ii)
+  output_rr <- calculate_r0(th_in = as.data.frame(t(theta)), sus = s_pick, b_vary = b_vary)
   
   start.rr <- output_rr$rr_out[min(which(output_rr$rr_out>0))]
   output_rr$rr_out[1:(min(which(output_rr$rr_out>0))-1)] <- start.rr
@@ -97,18 +96,10 @@ zika_single_sim <- function(transmission_rate){
   # Calculate seropositivity at pre-specified dates and corresponding likelihood
   epsilon <- theta[["epsilon"]]
   i=1; seroP=NULL; binom.lik=NULL
-  sero.years <- format(as.Date(seroposdates, format="%d/%m/%Y"),"%Y")
-  sero.y <- substr(sero.years,3,4)
-  lum.y <- c("13","15","17")
   for(date in seroposdates){
-    if(date < min(date.vals)){ 
-      seroP[i] <- epsilon
-      binom.lik[i] <- (dbinom(nLUM[lum.y==sero.y[i]], size=nPOP[lum.y==sero.y[i]], prob=seroP[i], log = T))
-    }else{ 
       seroP[i] <-  (min(R_traj[date.vals<date+3.5 & date.vals>date-3.5])/theta[["npop"]]) + 
         (1 - min(R_traj[date.vals<date+3.5 & date.vals>date-3.5])/theta[["npop"]])*epsilon
-      binom.lik[i] <- (dbinom(nLUM[lum.y==sero.y[i]], size=nPOP[lum.y==sero.y[i]], prob=seroP[i], log = T))
-    }
+      binom.lik[i] <- (dbinom(nLUM[i], size=nPOP[i], prob=seroP[i], log = T))
     i <- i+1
   }
   

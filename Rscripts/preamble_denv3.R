@@ -31,7 +31,7 @@ include.2014.control    <- T # if False then beta_base set to 0
 run.name <- "1112_model1" 
 
 ## MCMC parameters 
-MCMC.runs <- 500 #number of MCMC iterations 
+MCMC.runs <- 25000 #number of MCMC iterations 
 thinning.parameter <- 1
 multichain <- c(1:3)  # n chains to run in parallel
 mcmc.burn <- 0.4
@@ -54,8 +54,8 @@ itertabM=c(1:1) # Iterate over locations in set up and MCMC
 startdate <- as.Date("2013-01-01")  ## shouldn't be changed (some parameters are relative to this date)
 dt <-  7                            # time step
 start.output.date <- as.Date("2013-01-01")
-end.output.date <- as.Date("2015-11-02")
-seroposdates <- c(as.Date("2013-11-15"), as.Date("2015-11-02"))
+end.output.date <- as.Date("2014-08-05")
+seroposdates <- c(as.Date("2013-11-15"), as.Date("2014-08-05"))
 
 # print model run info ------------------------------------------------
 print(paste0("MCMC runs = ", MCMC.runs))
@@ -115,79 +115,3 @@ theme_zika_fiji <- function(){
         rect = element_rect(colour = "black", fill = "white")
   )
 }
-
-
-
-
-
-
-
-
-
-# Fit FP Zika epidemic ----------------------------------------------------
-#zikaFP <- read.csv("data/FP_zika.csv", stringsAsFactors = F)
-#dd <- substr(zikaFP$date,1,2)
-#mm <- substr(zikaFP$date,4,5)
-#Y <- substr(zikaFP$date,7,10)
-#zikaFP$realdate <- paste0(Y,"-",mm,"-",dd)
-#zikaFP$realdate <- as.Date(zikaFP$realdate)
-#
-#zikaFPfull <- data.frame("date"=zikaFP$realdate)
-#full_zika <- with(zikaFP,zikaFP$tahiti + zikaFP$ile_sous + zikaFP$moorea + zikaFP$tuamotu + zikaFP$marquises + zikaFP$australes)
-#avg_rep <- mean(c(zikaFP$tahitiRep,zikaFP$ile_sousRep,zikaFP$mooreaRep,zikaFP$tuamotuRep,zikaFP$marquisesRep,zikaFP$australesRep))
-#
-#full_zika_raw <- full_zika
-#full_zika <- full_zika*(1/avg_rep)
-#
-#zikaFPfull <- cbind(zikaFPfull, "rawZIKV"=full_zika_raw, "ZIKV"=full_zika)
-#zikaFPfull$time <- seq(1,length(zikaFPfull$date)*7,7)
-#
-##zikaFPfull <- zikaFPfull[1:18,]
-#quadraticModel <- lm(zikaFPfull$ZIKV ~ zikaFPfull$time + I(zikaFPfull$time^2))
-#x<-sort(zikaFPfull$time)
-#y<-quadraticModel$fitted.values[order(zikaFPfull$time)]
-#m <- quadraticModel$coefficients[1]
-#beta1 <- quadraticModel$coefficients[2]
-#beta2 <- quadraticModel$coefficients[3]
-#x <- zikaFPfull$time
-#y <- m + beta1*x + beta2*(x^2)
-#
-#offset=0#-(as.numeric(NEW.DATE-as.Date("2013-10-11")))
-#
-#Ctreg <- function(t, offset){
-#  if(offset+t<0){
-#    y2 <- 0
-#    as.numeric(y2)
-#  }else{
-#    tt <- offset+t
-#    y <- m + beta1*tt + beta2*(tt^2)
-#    y2 <- max(y, 0)
-#    as.numeric(y2)#*10) #reporting rate = 10%
-#  }
-#}
-
-# Fit DENV3 epidemic ------------------------------------------------------
-#denv3 <- read.csv("data/Central_2014_timeseries.csv", stringsAsFactors = F)
-#
-#denv3$time <- seq(1,length(denv3$date)*7,7)
-#
-#denv3 <- denv3[,c(1:2,6)]
-#colnames(denv3)[2] <- "DENV3"
-#poissonModel <- glm(denv3$DENV3 ~ denv3$time + I(denv3$time^2), family="poisson")
-#
-#x<-sort(denv3$time)
-#y<-poissonModel$fitted.values[order(denv3$time)]
-#d.m <- poissonModel$coefficients[1]
-#d.beta1 <- poissonModel$coefficients[2]
-#d.beta2 <- poissonModel$coefficients[3]
-#d.x <- denv3$time
-#d.y = exp(d.m + d.beta1*d.x + d.beta2*(d.x^2))
-#
-#D3reg <- function(t){
-#  #y <- exp(d.m + d.beta1*t + d.beta2*(t^2))
-#  y <- exp(1.58971 + 0.1019994*t - 0.0005130412*(t^2))
-#  y2 <- max(y, 0)
-#  as.numeric(y2*(1/0.065)) #reporting rate = 10%
-#}
-#
-#DENVinfections <- as.numeric(y*(1/0.1))
