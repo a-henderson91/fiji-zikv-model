@@ -17,6 +17,7 @@ iiH <- 2
 load_posterior_1 <- load.posteriors(load.run.name = model1_name, file.path="posterior_denv2014fit", iiH, mcmc.burn=mcmc.burn)
   list2env(load_posterior_1,globalenv())
 iiH <- 1
+
 ## fixed DENV3 2014 values to simulate 2013-14 DENV-3 outbreak
 load(file=here::here("data/theta_denv.RData"))
 
@@ -71,11 +72,12 @@ setup <- results_set_up(iiH, parameter_est_file = "parameters_est")
   list2env(setup, globalenv())
   setup$thetaAlltab[1,,]
   setup$thetatab[1,]
+  setup$theta_initAlltab[1,1,]
   setup$cov_matrix_theta0
 # Set up Priors  ----------------------------------------------------------
 ## Estimate prior distribution for ZIKV intro time from BEAST output
 source(here::here("Rscripts/load_tmrca_calc_prior.R"))
-intro_prior_mu;intro_prior_sigma
+intro_prior_mu; intro_prior_sigma
 source(here::here("Rscripts/prior_distributions.R"))
 
 if(limit.to.2013 == T){
@@ -89,7 +91,7 @@ thetaAlltab[1,iiH,'beta_v_amp'] <- denv3_2014_esimates$beta_v_amp ## seasonality
 thetaAlltab[1,iiH,'beta_v_mid'] <- denv3_2014_esimates$beta_v_mid ## seasonality parameters estimated during DENV3-2014 fitting
 thetaAlltab[1,iiH,'beta_grad'] <- denv3_2014_esimates$beta_grad
 thetaAlltab[1,iiH,'beta_mid'] <- denv3_2014_esimates$beta_mid
-thetaAlltab[1,iiH,'beta_width'] <- 20 #denv3_2014_esimates$beta_width
+thetaAlltab[1,iiH,'beta_width'] <- denv3_2014_esimates$beta_width
 
 if(include.2014.control == T){
   thetaAlltab[1,iiH,'beta_base'] <- denv3_2014_esimates$beta_base
@@ -114,7 +116,7 @@ dev.copy(pdf, here::here("output/fig_supp_controlFn.pdf"), 6,4)
 # run a single simulation with initial values -----------------------------
 source(here::here("Rscripts/zika-single-simulation.R"))
 initial_beta_h <- thetaAlltab[1,iiH,][["beta_h"]]
-zika_single_sim(0.25)
+zika_single_sim(initial_beta_h)
 if(zika_single_sim(initial_beta_h)==-Inf){
   t_rate <- seq(0.2, 0.3, 0.02)
     lik_search <- sapply(t_rate, function(xx){zika_single_sim(xx)})
@@ -125,6 +127,7 @@ if(zika_single_sim(initial_beta_h)==-Inf){
 if(zika_single_sim(thetaAlltab[1,iiH,][["beta_h"]])==-Inf){
   stop("Starting with infinite likelihood - this won't end well!")
 }
+zika_single_sim(thetaAlltab[1,iiH,][["beta_h"]])
 
 ## Plot "introduction function" with initial starting values
 intro_plot_vals <- as.data.frame(t(thetaAlltab[1,iiH,]))
@@ -150,15 +153,13 @@ diag(cov_matrix_thetaAll)
 
 m = 1; iiM=1
 foreach(iiM=multichain) %dopar% {  # Loop over regions with parallel MCMC chains
- 
 
-adapt_size_start <- round(0.1*MCMC.runs)
+adapt_size_start <- ceiling(0.01*MCMC.runs)
 
 for (m in 1:MCMC.runs){
   # Scale COV matrices for resampling using error term epsilon
   if(m==1){
     epsilon0 = 0.001
-    accept_rate = NA
     cov_matrix_theta=epsilon0*cov_matrix_theta0
     cov_matrix_thetaA=epsilon0*cov_matrix_thetaAll
     cov_matrix_theta_init=epsilon0*cov_matrix_theta_initAll
@@ -174,15 +175,12 @@ for (m in 1:MCMC.runs){
     prior_current = prior[m]
     covmat.empirical <- cov_matrix_thetaA
     theta.mean <- thetaAlltab_current[1,]
-    adapting.shape <- 0
     # initialise counter for storing results (m/thining parameter)
     j=1
   }else{
-    scaling.multiplier <- exp((0.99)^(m-adapt_size_start)*(accept_rate-0.234))
+    scaling.multiplier <- exp((0.9999)^(m-adapt_size_start)*(accept_rate-0.234))
     epsilon0 <- epsilon0 * scaling.multiplier
-    #epsilon0 <- min(epsilon0, 0.5)
-    #epsilon0 <- max(epsilon0, 1e-15)
-    
+
     cov_matrix_theta=epsilon0*cov_matrix_theta0
     cov_matrix_thetaA=epsilon0*cov_matrix_thetaAll
     cov_matrix_theta_init=epsilon0*cov_matrix_theta_initAll
@@ -220,8 +218,8 @@ for (m in 1:MCMC.runs){
     theta_init_star <- output_H$theta_initS
     
     # Run model simulation
-    output1 <- Deterministic_modelR_final_DENVimmmunity(theta=c(theta_star,thetaA_star,theta_denv), theta_init_star, locationI=locationtab[iiH], seroposdates=seroposdates, include.count=include.count)
-      (sim_marg_lik_star=sim_marg_lik_star + output1$lik)
+    output1 <- Deterministic_modelR_final_DENVimmmunity(theta = c(theta_star,thetaA_star,theta_denv), theta_init_star, seroposdates=seroposdates)
+      (sim_marg_lik_star <- sim_marg_lik_star + output1$lik)
     
     #Store vales
     thetaAllstar[iiH,] <- thetaA_star
@@ -239,8 +237,8 @@ for (m in 1:MCMC.runs){
     
     # Calculate prior density for current and proposed theta set
     prior.theta <- ComputePrior(iiH, c(thetatab_current,thetaAlltab_current[iiH,]), c(theta_star,thetaA_star), covartheta = cov_matrix_thetaA)
-    prior.star <- (prior.theta$prior.star*prior.star)
-    prior.current <- (prior.theta$prior*prior.current)
+    prior.star <- (prior.theta$prior.star * prior.star)
+    prior.current <- (prior.theta$prior * prior.current)
   } # end loop over regions
   
   # Calculate probability function - MH algorithm
@@ -248,7 +246,7 @@ for (m in 1:MCMC.runs){
     q_theta_given_theta_star = sum(log(thetaAllstar[iiH, estimated_params]))
     q_theta_star_given_theta = sum(log(thetaAlltab_current[1, estimated_params]))
   
-  val <- (prior.star/prior.current)*exp((sim_marg_lik_star-sim_liktab_current) +  (q_theta_given_theta_star - q_theta_star_given_theta)) 
+  val <- (prior.star/prior.current) * exp((sim_marg_lik_star - sim_liktab_current) +  (q_theta_given_theta_star - q_theta_star_given_theta)) 
   
   if(is.na(val)){
     output_prob=0}else if(is.nan(val)){
@@ -284,7 +282,7 @@ for (m in 1:MCMC.runs){
       accepttab[j]=0
       prior[j+1] = prior[j] 
     }
-    accept_rate=sum(accepttab[1:j])/j
+    accept_rate = sum(accepttab[1:j])/j
     j <- j+1
   }
   
@@ -301,20 +299,22 @@ for (m in 1:MCMC.runs){
     prior_current = prior.star
   }
   
-  if(m<adapt_size_start){
+  if(m < adapt_size_start){
     accept_rate <- 0.234
   }
   
-  if(m %% min(MCMC.runs,1000)==0){
+  if(m %% min(MCMC.runs, 500)==0){
     print(c(iiM,"m"=m,  
-            "acc"=signif(accept_rate,3), 
+            "accept"=signif(sum(accepttab[1:m])/m,3), 
             "lik"=signif(sim_liktab_current,3),
-            epsilon0,
-            signif(thetaAlltab_current[1,'beta_h'],3),
-            thetaAlltab_current[1,'intro_mid'],
-            thetaAlltab_current[1,'rep']),
+            "val" = val,
+            "prior" = prior.star/prior.current,
+            epsilon0
+            ),
             digits = 2)
-  save(sim_liktab,
+    }  
+  if(m %% min(MCMC.runs, 5000)==0){
+    save(sim_liktab,
             prior,
             accepttab,
             c_trace_tab,
@@ -325,36 +325,19 @@ for (m in 1:MCMC.runs){
             thetaAlltab,
             theta_initAlltab,
             file=paste("posterior_output/outputR_",iiM,"_",run.name,".RData",sep=""))
-    }  
+  }
   } # End MCMC loop
 }
 endtime <- Sys.time()
 (time.take = endtime-st.time)
 
-
-## plot posterior of cases
-source(here::here("Rscripts", preamblecode))
-data <- load.data.multistart(Virus = "ZIKV", startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0) #virusTab[iiH], dataTab[iiH])
-  list2env(data,globalenv())
-
-load_posterior_1 <- load.posteriors(load.run.name=run.name, file.path="posterior_output", iiH, mcmc.burn=mcmc.burn)
-  list2env(load_posterior_1,globalenv())
-
-tMax <- dim(c_trace_tab)[2]
-btsp <- 4000
-cvector <- matrix(NA,nrow=btsp,ncol=tMax)
-for(ii in 1:btsp){
-  pick <- sample(1:MCMC.runs, 1)
-  cvector[ii,] <- ReportC(c_trace_tab[pick, 1:tMax],thetatab[pick,'rep'],thetatab[pick,'repvol'])
-}
-medP <- apply(cvector,2,function(x){median(x, na.rm=T)})
-ciP1 <- apply(cvector,2,function(x){quantile(x,0.025, na.rm=T)})
-ciP2 <- apply(cvector,2,function(x){quantile(x,0.975, na.rm=T)})
-
-par(mfrow=c(1,1))
-plot(data$date.vals, data$y.vals, ylim=c(0, max(ciP2)), bty="n", type='h', ylab="Cases", xlab="Date", pch=16, col=1)
-lines(data$date.vals[1:tMax], medP, col=col1)
-polygon(c(data$date.vals[1:tMax], rev(data$date.vals[1:tMax])),
-        c(ciP1, rev(ciP2)), lty=0, col=col1a)
-mtext(LETTERS[1],side=3, adj=0, font=2)
-grid(NA,NULL, lty = 1, col = colgrid) 
+# load(here::here("posterior_output/outputR_1_1114_zikvmodel.RData"))
+# m <-  max(which(!is.na(thetaAlltab[, 1, "rep"])))
+# par(mfrow = c(2,2))
+# plot(thetaAlltab[1:m, 1, "beta_h"], type = "l")
+# plot(thetaAlltab[1:m, 1, "rep"], type = "l")
+# plot(thetaAlltab[1:m, 1, "intro_mid"], type = "l")
+# plot(thetaAlltab[1:m, 1, "intro_base"], type = "l")
+# plot(accepttab[1:m], type = "p", main = mean(accepttab[1:m], na.rm = T))
+# plot(sim_liktab[1:m], type = "l")
+# plot(prior[2:m], type = "l")
