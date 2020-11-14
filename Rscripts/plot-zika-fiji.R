@@ -584,7 +584,6 @@ deviance.at.post.mean = -2*loglik_theta_bar
 effective.param = var(-2*sim_likOut)/2
 dic.calc = deviance.at.post.mean + effective.param
 
-
 param1 <- cbind(
   c.text(r0_post,3),
   c.text(rr_post,3),

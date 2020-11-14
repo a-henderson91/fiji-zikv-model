@@ -181,20 +181,15 @@ for (m in 1:MCMC.runs){
     #scaling.multiplier <- exp((1-1e-7)^(m-adapt_size_start)*(accept_rate-0.234))
     #epsilon0 <- epsilon0 * scaling.multiplier
     #epsilon0 <- min(epsilon0, 0.5)
-    epsilon0 <- max(min(0.1,exp(log(epsilon0)+(accept_rate-0.234)*0.999^m)),1e-6) # Stop epsilon getting too big or small
-
+    scaling.multiplier <- exp((0.9999)^(m-adapt_size_start)*(accept_rate-0.234))
+    
     cov_matrix_theta=epsilon0*cov_matrix_theta0
     cov_matrix_thetaA=epsilon0*cov_matrix_thetaAll
     cov_matrix_theta_init=epsilon0*cov_matrix_theta_initAll
   }
   
-  ## Resample global theta every 2nd step
-  if(m %% 2==0){
-    output_theta <- SampleTheta(global=1,thetatab_current,theta_initAlltab_current[iiH,],cov_matrix_theta,cov_matrix_theta_init)
-    theta_star <- output_theta$thetaS
-  }else{
-    theta_star <- thetatab_current
-  }
+  ## DELETED: Resample global theta every 2nd step 
+  theta_star <- thetatab_current
   
   ## Resample local parameters every step
   prior.star <- 1
@@ -208,8 +203,6 @@ for (m in 1:MCMC.runs){
   rTraceStar <- 0*r_trace_tab_current
   for(kk in 1){ #itertab){ 
     iiH <- kk
-    data <- load.data.multistart.month(Virus = "ZIKV", startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0) 
-      list2env(data,globalenv())
       
     if(m==1){ # Don't resample on 1st step - check the zeroes!
       output_H <- SampleTheta(global=0,thetaAlltab_current[iiH,],theta_initAlltab_current[iiH,],0*cov_matrix_thetaA,0*cov_matrix_theta_init)
@@ -333,13 +326,16 @@ for (m in 1:MCMC.runs){
 endtime <- Sys.time()
 (time.take = endtime-st.time)
 
-load(here::here("posterior_output/outputR_1_1114_zikvmodel_AKepsilon.RData"))
+load(here::here("posterior_output/outputR_1_test_monthly.RData"))
 m <-  max(which(!is.na(thetaAlltab[, 1, "rep"])))
 par(mfrow = c(2,2))
 plot(thetaAlltab[floor(m*0.4):m, 1, "beta_h"], type = "l")
 plot(thetaAlltab[floor(m*0.4):m, 1, "rep"], type = "l")
 plot(thetaAlltab[floor(m*0.4):m, 1, "intro_mid"], type = "l")
 plot(thetaAlltab[floor(m*0.4):m, 1, "intro_base"], type = "l")
+plot(c_trace_tab[2,1,], type = 'l')
+  lines(c_trace_tab[m,1,])
+  lines(c_trace_tab[round(m/2),1,])
 plot(accepttab[1:m], type = "p", main = mean(accepttab[1:m], na.rm = T))
 plot(sim_liktab[1:m], type = "l")
 plot(prior[2:m], type = "l")

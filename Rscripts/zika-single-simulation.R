@@ -63,7 +63,7 @@ zika_single_sim <- function(transmission_rate){
   casecount[casecount<0] <- 0
   cases_est <- ReportC(casecount, theta[["rep"]], 1/theta[["repvol"]] )
   cases_est[cases_est==0] <- NA
-  
+
   # calculate R0 ------------------------------------------------------------
   tMax <- length(casecount)
   t.start = 0

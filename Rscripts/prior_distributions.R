@@ -29,7 +29,7 @@ priorBeta <- function(x){dunif(x, min = 0, max = 1)}
 
 priorIntro <- function(x){dnorm(x, mean=intro_prior_mu, sd=intro_prior_sigma)} ## from 'Export start time Central Division.R'
 
-priorInitInf <- function(x){dunif(x, min = 0.025, max = 25)} ## at least 1, no more than 1000 (total into = 4x10xInitInf)
+priorInitInf <- function(x){dunif(x, min = 0.025, max = 20)} ## at least 1, no more than 1000 (total into = 4x10xInitInf)
 #priorInitWidth <- function(x){dunif(x, min=0, max=50)} ## removed estimate of width
 
 priorChi<-function(x){dunif(x,min=0,max=1)} 
