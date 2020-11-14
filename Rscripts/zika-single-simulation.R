@@ -67,7 +67,7 @@ zika_single_sim <- function(transmission_rate){
   # calculate R0 ------------------------------------------------------------
   tMax <- length(casecount)
   t.start = 0
-  time.V = (1:tMax)*7  
+  time.V = (1:tMax)*dt
   model_st <- startdate
   date0 = (model_st-date.vals[1]) %>% as.numeric() 
   
@@ -95,13 +95,13 @@ zika_single_sim <- function(transmission_rate){
   # Compute likelihood ------------------------------------------------------
   # Calculate seropositivity at pre-specified dates and corresponding likelihood
   epsilon <- theta[["epsilon"]]
-  i=1; seroP=NULL; binom.lik=NULL
-  for(date in seroposdates){
-      seroP[i] <-  (min(R_traj[date.vals<date+3.5 & date.vals>date-3.5])/theta[["npop"]]) + 
-        (1 - min(R_traj[date.vals<date+3.5 & date.vals>date-3.5])/theta[["npop"]])*epsilon
-      binom.lik[i] <- (dbinom(nLUM[i], size=nPOP[i], prob=seroP[i], log = T))
-    i <- i+1
-  }
+    i=1; seroP=NULL; binom.lik=NULL
+      for(date in seroposdates){
+          seroP[i] <- (min(R_traj[date.vals<date+(dt/2) & date.vals>date-(dt/2)])/theta[["npop"]]) + 
+            (1 - min(R_traj[date.vals<date+(dt/2) & date.vals>date-(dt/2)])/theta[["npop"]])*epsilon
+          binom.lik[i] <- (dbinom(nLUM[i], size=nPOP[i], prob=seroP[i], log = T))
+        i <- i+1
+        }
   
   ln.full <- length(y.vals)
   likelihood <- sum(binom.lik) + sum(log(dnbinom(y.vals,
