@@ -67,6 +67,6 @@ zikv_model_ode <- function(theta, init.state, time.vals.sim) {
       
     return(list(c(dS,dE,dI,dR,dC,dSd,dEd,dId,dT1d,dT2d,dCd)))
   }
-  traj <- as.data.frame(ode(init.state, time.vals.sim, SIR_ode, theta, method = "ode45"))
+  traj <- as.data.frame(ode(init.state, time.vals.sim, SIR_ode, theta, method = "lsoda"))
   return(traj)
 }
