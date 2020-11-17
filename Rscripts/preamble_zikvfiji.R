@@ -31,13 +31,13 @@ include.sero.likelihood <- T # whether to include serological data in likelihood
 vector.control          <- T # whether to reduce transmission in March2014 when vector control campaign was in effect 
 include.2014.control    <- T # if False then beta_base set to 0
 limit.to.2013           <- F # if True then prior on intro time is limited to 365 (i.e. ZIKV starts in 2013)
-run.name <- "1114_zikvMonth" 
+run.name <- "1114_zikvWeek_rec0"
 model1_name <- "1112_model1"
 dt <- (7*52)/12
   
 ## MCMC parameters 
-MCMC.runs <- 300000 #number of MCMC iterations 
-thinning.parameter <- 2
+MCMC.runs <- 1e6 #number of MCMC iterations 
+thinning.parameter <- 4
 multichain <- c(1:3)  # n chains to run in parallel
 mcmc.burn <- 0.4
 

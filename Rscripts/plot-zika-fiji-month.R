@@ -260,9 +260,12 @@ axis(side=2, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
 axis.Date(1, at=seq(min(plot_fig2A$dates), max(plot_fig2A$dates), by="3 months"), 
           labels=format(seq(min(plot_fig2A$dates), max(plot_fig2A$dates), by="3 months"),"%b-%y"), las=1)
 par(new=T)
-lines(dataframe.p2$date.vals, dataframe.p2$med_intro, col=col7, lwd = 2)
+#lines(dataframe.p2$date.vals, dataframe.p2$med_intro, col=col7, lwd = 2)
 polygon(c(dataframe.p2$date.vals, rev(dataframe.p2$date.vals)), 
         c(dataframe.p2$ci_intro1,rev(dataframe.p2$ci_intro2)), lty=0, col=col7a)
+for(i in 1:20){
+  lines(dataframe.p2$date.vals, introvector[i,], type = "l", col = col7a)
+}
 mtext("Introductions", side=2, line=2, col=col7)
 par(new=T)
 ylims <- c(0, max(dataframe.p2$ciP2_R)*1.1)
@@ -491,9 +494,9 @@ if(output_diagnostics==T){
     ylims <- c(max(0, min(d)-(0.25*min(d))), max(d)*1.25)
   plot(dsplit$`1`, type='l', col=col7, ylab="Parameter value", xlab="iteration", ylim=ylims,
        main=parameters_names[param])
-  lines(dsplit$`2`, type='l', col=col3)
+  lines(dsplit$`2`, type='l', col=col5)
   lines(dsplit$`3`, type='l', col=col4)
-  lines(dsplit$`4`, type='l', col=col5)
+  lines(dsplit$`4`, type='l', col=col3)
   
   hist(d, col=col1, xlab=param, main=paste0("ESS = ", signif(effectiveSize(thetatab[[param]]), 3)))
   }

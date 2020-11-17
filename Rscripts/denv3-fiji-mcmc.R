@@ -41,7 +41,6 @@ data.series.max <- weather.data$max_air_temp[as.Date(weather.data$lsd)>=first.te
 data.series.min <- weather.data$min_air_temp[as.Date(weather.data$lsd)>=first.temp.date & as.Date(weather.data$lsd)<=max(as.Date(date.vals))]
 data.series <- ((data.series.max-data.series.min)/2)+data.series.min
 date.series <- weather.data$lsd[as.Date(weather.data$lsd)>=first.temp.date & as.Date(weather.data$lsd)<=max(as.Date(date.vals))]
-plot(date.series, data.series, type='l')
 
 #betas <- weather.fit(data=data.series, iter=min(MCMC.runs, 5e4), tuning=10)
 #  save(betas,file=paste("posterior_output_betas/outputBetas.RData",sep=""))
@@ -93,11 +92,16 @@ lq_avgT <- quantile(data.series, 0.25, na.rm=T)
 uq_avgT <- quantile(data.series, 0.75, na.rm=T)
 
 ## plot
+par(mfrow = c(1,2))
+plot(date.series, data.series, type='l', col = col1, ylab = "Temperature (c)", xlab = "Year", bty = "n")
+grid(NA,NULL, lty = 1, col = colgrid) 
+mtext("A",side=3, adj=0, font=2)
 plot(mordecai_tempR0$aegy.temps.DTR8, mordecai_tempR0$R0.rel, type="l", bty="n", 
      xlab="Temperature (C)", ylab="Relative R0")
 lines(c(med_avgT,med_avgT), c(0,1), col=col1)
   polygon(c(lq_avgT, uq_avgT, uq_avgT, lq_avgT), c(0,0,1,1), lty=0, col=col1a)
-dev.copy(pdf, here::here("output/fig_supp_mordecaiFijitemp.pdf"), 6, 4)
+mtext("B",side=3, adj=0, font=2)
+dev.copy(pdf, here::here("output/EDITED_fig_supp_mordecaiFijitemp.pdf"), 6, 4)
   dev.off()
 
 # Check seasonality fit worked --------------------------------------------
