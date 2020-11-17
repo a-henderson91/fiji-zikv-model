@@ -303,9 +303,9 @@ for (m in 1:MCMC.runs){
     accept_rate <- 0.234
   }
   
-  if(m %% min(MCMC.runs, 500)==0){
+  if(m %% min(MCMC.runs, 1000)==0){
     print(c(iiM,"m"=m,  
-            "accept"=signif(sum(accepttab[1:m])/m,3), 
+            "accept"=signif(accept_rate,3), 
             "lik"=signif(sim_liktab_current,3),
             "val" = val,
             "prior" = prior.star/prior.current,
