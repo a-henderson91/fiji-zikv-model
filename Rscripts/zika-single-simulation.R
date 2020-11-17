@@ -95,14 +95,26 @@ zika_single_sim <- function(transmission_rate){
   # Compute likelihood ------------------------------------------------------
   # Calculate seropositivity at pre-specified dates and corresponding likelihood
   epsilon <- theta[["epsilon"]]
+  alpha <- theta[["alpha"]]
+  if(!is.na(theta[["mu"]])){
+    mu <- theta[["mu"]]
+    eta <- theta[["eta"]]
+  }else{
+    mu <- 0
+    eta <- 0
+  }
     i=1; seroP=NULL; binom.lik=NULL
       for(date in seroposdates){
-          seroP[i] <- (min(R_traj[date.vals<date+(dt/2) & date.vals>date-(dt/2)])/theta[["npop"]]) + 
-            (1 - min(R_traj[date.vals<date+(dt/2) & date.vals>date-(dt/2)])/theta[["npop"]])*epsilon
+        time_elapsed <- min(time.vals[date.vals<date+(dt/2) & date.vals>date-(dt/2)])
+        adjusted_pop <- theta[["npop"]]-(time_elapsed*mu*theta[["npop"]])+(time_elapsed*eta*theta[["npop"]])
+        modelled_R <- (min(R_traj[date.vals<date+(dt/2) & date.vals>date-(dt/2)])/adjusted_pop)
+          false_positives <- modelled_R*alpha
+          false_negatives <- (1-modelled_R)*epsilon
+          seroP[i] <- modelled_R + false_negatives - false_positives
           binom.lik[i] <- (dbinom(nLUM[i], size=nPOP[i], prob=seroP[i], log = T))
         i <- i+1
         }
-  
+    
   ln.full <- length(y.vals)
   likelihood <- sum(binom.lik) + sum(log(dnbinom(y.vals,
                                                  mu=theta[["rep"]]*(casecount),
@@ -124,7 +136,15 @@ zika_single_sim <- function(transmission_rate){
   plot(date.vals,rr_post,type='l',col=1, ylim=c(0,3), xlab="", ylab="")
   lines(date.vals,decline_ii, type='l',col=2, yaxt='n', xaxt='n')
   par(new=T)
-  plot(date.vals, (R_traj/342000)+theta[["epsilon"]], type='l', col=22, yaxt='n', xaxt='n', xlab="", ylab="", ylim=c(0,1))
+  adjusted_pop <- sapply(time.vals, function(xx){theta[["npop"]]-(xx*mu*theta[["npop"]])+(xx*eta*theta[["npop"]])})
+    modelled_R_traj <- R_traj/adjusted_pop
+      false_pos <- (1-modelled_R_traj)*epsilon
+      false_neg <- (modelled_R_traj)*(alpha/(1-alpha))
+  recorded_sero <- modelled_R_traj + ## what the model thinks happened in reality
+    false_pos - ## add in the negatives that will test positive 
+    false_neg ## remove the positives that are NOT picked up by the assay
+  plot(date.vals, recorded_sero, type='l', col=22, yaxt='n', xaxt='n', xlab="", ylab="", ylim=c(0,1))
+  lines(date.vals, modelled_R_traj, type='l', col=22, lty = 2, yaxt='n', xaxt='n', xlab="", ylab="", ylim=c(0,1))
   points(seroposdates, (nLUM/nPOP), col=4, pch=1)
   axis(side=4)
   
