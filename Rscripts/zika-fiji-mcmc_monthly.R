@@ -74,6 +74,7 @@ setup <- results_set_up_monthly(iiH, parameter_est_file = "parameters_est")
   setup$thetatab[1,]
   setup$theta_initAlltab[1,1,]
   setup$cov_matrix_theta0
+  
 # Set up Priors  ----------------------------------------------------------
 ## Estimate prior distribution for ZIKV intro time from BEAST output
 source(here::here("Rscripts/load_tmrca_calc_prior.R"))
@@ -181,7 +182,8 @@ for (m in 1:MCMC.runs){
     #scaling.multiplier <- exp((1-1e-7)^(m-adapt_size_start)*(accept_rate-0.234))
     #epsilon0 <- epsilon0 * scaling.multiplier
     #epsilon0 <- min(epsilon0, 0.5)
-    scaling.multiplier <- exp((0.9999)^(m-adapt_size_start)*(accept_rate-0.234))
+    #scaling.multiplier <- exp((0.9999)^(m-adapt_size_start)*(accept_rate-0.234))
+    epsilon0 <- max(min(0.1,exp(log(epsilon0)+(accept_rate-0.234)*0.999^m)),1e-6) # Stop epsilon getting too big or small
     
     cov_matrix_theta=epsilon0*cov_matrix_theta0
     cov_matrix_thetaA=epsilon0*cov_matrix_thetaAll
@@ -298,7 +300,7 @@ for (m in 1:MCMC.runs){
     accept_rate <- 0.234
   }
   
-  if(m %% min(MCMC.runs, 500)==0){
+  if(m %% min(MCMC.runs, 1000)==0){
     print(c(iiM,"m"=m,  
             "accept"=signif(sum(accepttab[1:m])/m,3), 
             "lik"=signif(sim_liktab_current,3),
@@ -326,16 +328,16 @@ for (m in 1:MCMC.runs){
 endtime <- Sys.time()
 (time.take = endtime-st.time)
 
-load(here::here("posterior_output/outputR_1_test_monthly.RData"))
-m <-  max(which(!is.na(thetaAlltab[, 1, "rep"])))
-par(mfrow = c(2,2))
-plot(thetaAlltab[floor(m*0.4):m, 1, "beta_h"], type = "l")
-plot(thetaAlltab[floor(m*0.4):m, 1, "rep"], type = "l")
-plot(thetaAlltab[floor(m*0.4):m, 1, "intro_mid"], type = "l")
-plot(thetaAlltab[floor(m*0.4):m, 1, "intro_base"], type = "l")
-plot(c_trace_tab[2,1,], type = 'l')
-  lines(c_trace_tab[m,1,])
-  lines(c_trace_tab[round(m/2),1,])
-plot(accepttab[1:m], type = "p", main = mean(accepttab[1:m], na.rm = T))
-plot(sim_liktab[1:m], type = "l")
-plot(prior[2:m], type = "l")
+# load(here::here("posterior_output/outputR_1_test_monthly.RData"))
+# m <-  max(which(!is.na(thetaAlltab[, 1, "rep"])))
+# par(mfrow = c(2,2))
+# plot(thetaAlltab[floor(m*0.4):m, 1, "beta_h"], type = "l")
+# plot(thetaAlltab[floor(m*0.4):m, 1, "rep"], type = "l")
+# plot(thetaAlltab[floor(m*0.4):m, 1, "intro_mid"], type = "l")
+# plot(thetaAlltab[floor(m*0.4):m, 1, "intro_base"], type = "l")
+# plot(c_trace_tab[2,1,], type = 'l')
+#   lines(c_trace_tab[m,1,])
+#   lines(c_trace_tab[round(m/2),1,])
+# plot(accepttab[1:m], type = "p", main = mean(accepttab[1:m], na.rm = T))
+# plot(sim_liktab[1:m], type = "l")
+# plot(prior[2:m], type = "l")
