@@ -6,7 +6,7 @@
 
 virus <- "ZIKV"  # DEN3 or ZIKV
 
-output_simulations <- 
+output_simulations <- T
 output_diagnostics <- T
 ll <- 1
 
@@ -29,7 +29,7 @@ sapply(all_files, function(xx){source(here::here("Rfunctions/", xx))})
 
 # import posteriors -------------------------------------------------------
 labelN <- 1
-m.tot <- length(list.files(path = here::here(post_file_path), pattern = paste0("*", run.name)))
+#m.tot <- length(list.files(path = here::here(post_file_path), pattern = paste0("*", run.name)))
 load_posterior_1 <- load.posteriors(load.run.name = run.name, file.path = post_file_path, iiH, mcmc.burn = mcmc.burn)
   list2env(load_posterior_1,globalenv())
 
@@ -140,10 +140,12 @@ cvector <- matrix(NA,nrow=btsp,ncol=tMax)
 ivector <- matrix(NA,nrow=btsp,ncol=tMax)
 rvector <- matrix(NA,nrow=btsp,ncol=tMax)
 rvectorAdj <- matrix(NA,nrow=btsp,ncol=tMax)
-introvector <- matrix(NA,nrow=btsp,ncol=tMax)
 cvectorDENV <- matrix(NA,nrow=btsp,ncol=tMax)
 ln_denv <- length(denv.cases)
 first_zikv <- min(which(y.vals>0))
+## plot intro_vector on weekly timescale
+time.vals.week <- seq(0, max(time.vals), 7)
+introvector <- matrix(NA,nrow=btsp,ncol=length(time.vals.week))
 
 ## adjsut population
 mu <- 1/(thetatab[1,"mu"]*365.25) %>% as.numeric()
@@ -170,10 +172,11 @@ for(ii in 1:btsp){
   modelled_R_traj <- rvector[ii,]
       false_pos <- (1-modelled_R_traj)*epsilon  ## falsely record epsilon% of the actual negatives as positives
       detected_pos <- (modelled_R_traj)*(alpha)     ## identify alpha% of the actual positives
-  recorded_sero <- true_pos + ## what the model thinks happened in reality
+  recorded_sero <- detected_pos + ## what the model thinks happened in reality
     false_pos ## add in the negatives that will test positive 
   rvectorAdj[ii,] <- (recorded_sero)
-  introvector[ii,] <- sapply(time.vals[1:tMax], function(xx){intro_f(xx, mid = thetatab[pick,'intro_mid'], width = thetatab[pick,'intro_width'], base = thetatab[pick,'intro_base'])})
+  
+  introvector[ii,] <- sapply(time.vals.week, function(xx){intro_f(xx, mid = thetatab[pick,'intro_mid'], width = thetatab[pick,'intro_width'], base = thetatab[pick,'intro_base'])})
 }
 ## plot posterior of cases
 tMaxDenv <- length(load_DENVfit_1$c_trace_tab[1,])
@@ -277,17 +280,19 @@ i=1; lci=NULL;uci=NULL;lci_A=NULL;uci_A=NULL;points=NULL;points_A=NULL; date=NUL
 dataframe.sero <- data.frame(points,lci,uci, seroposdates)
 dataframe.p2 <- data.frame(date.vals=date.vals[1:tMax], y.vals.plot, 
                            medP_R, ciP1_R, ciP2_R,
-                           medP_Radj, ciP1_Radj, ciP2_Radj,
+                           medP_Radj, ciP1_Radj, ciP2_Radj)
+date.vals.week <- time.vals.week + startdate
+dataframe.intro <- data.frame("date.vals"=date.vals.week,
                            med_intro, ci_intro1, ci_intro2)
 
-plot(dataframe.p2$date.vals, dataframe.p2$ci_intro2, col=0, ylab="", yaxt="n", xlab="Date", bty="n", xaxt="n")
+plot(dataframe.intro$date.vals, dataframe.intro$ci_intro2, col=0, ylab="", yaxt="n", xlab="Date", bty="n", xaxt="n")
 axis(side=2, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
 axis.Date(1, at=seq(min(plot_fig2A$dates), max(plot_fig2A$dates), by="3 months"), 
           labels=format(seq(min(plot_fig2A$dates), max(plot_fig2A$dates), by="3 months"),"%b-%y"), las=1)
 par(new=T)
-lines(dataframe.p2$date.vals, dataframe.p2$med_intro, col=col7, lwd = 2)
-polygon(c(dataframe.p2$date.vals, rev(dataframe.p2$date.vals)), 
-        c(dataframe.p2$ci_intro1,rev(dataframe.p2$ci_intro2)), lty=0, col=col7a)
+lines(dataframe.intro$date.vals, dataframe.intro$med_intro, col=col7, lwd = 2)
+polygon(c(dataframe.intro$date.vals, rev(dataframe.intro$date.vals)), 
+        c(dataframe.intro$ci_intro1,rev(dataframe.intro$ci_intro2)), lty=0, col=col7a)
 #for(i in 1:20){
 #  lines(dataframe.p2$date.vals, introvector[i,], type = "l", col = col7a)
 #}
@@ -357,9 +362,13 @@ mtext("C",side=3, adj=0, font=2)
 plotCosRR <- NULL
 plotCosR0 <- NULL
 plotDecline <- NULL
+plotDenv <- NULL
 btstrap <- sample(picks, 400, replace=T)
+btstrap_denv <- sample(load_DENVfit_1$picks, 400, replace=T)
+thetatab_denv <- load_DENVfit_1$thetatab
 for(ii in 1:length(btstrap)){
   b_ii <- btstrap[ii]
+  b_denv_ii <- btstrap_denv[ii]
   t.start <- 0
   time.V <- (1:tMax)*dt
   date0 <- (startdate-date.vals[1]) %>% as.numeric() 
@@ -367,11 +376,16 @@ for(ii in 1:length(btstrap)){
   beta_ii <- seasonal_f(time.V[1:tMax], date0, amp=thetatab[b_ii,'beta_v_amp'], mid=thetatab[b_ii,'beta_v_mid'])
   decline_ii <- control_f(time.V[1:tMax], base=thetatab[b_ii, "beta_base"], mid=thetatab[b_ii,"beta_mid"], width=thetatab[b_ii,"beta_width"])
   b_vary <- beta_ii
-  
   s_pick <- s_trace_tab[b_ii,1:tMax]/thetatab$npop[b_ii] 
   
   output_rr <- calculate_r0(th_in=thetatab[b_ii,], sus = s_pick, b_vary=b_vary*decline_ii)
   output_rr_nocontrol <- calculate_r0(th_in=thetatab[b_ii,],sus = s_pick, b_vary = b_vary)
+  
+  time.V.d <- (1:tMaxDenv)*7
+  beta_denv_ii <- seasonal_f(time.V.d[1:tMaxDenv], date0, amp=thetatab_denv[b_denv_ii,'beta_v_amp'], mid=thetatab_denv[b_denv_ii,'beta_v_mid'])
+    b_vary_denv <- beta_denv_ii
+  s_pick_denv <- load_DENVfit_1$s_trace_tab[b_denv_ii,1:tMaxDenv]/thetatab$npop[b_denv_ii] 
+  output_rr_denv <- calculate_r0(th_in=thetatab_denv[b_denv_ii,],sus = s_pick_denv, b_vary = b_vary_denv)
   
   start.rr <- output_rr$rr_out[min(which(output_rr$rr_out>0))]
   output_rr$rr_out[1:(min(which(output_rr$rr_out>0))-1)] <- start.rr
@@ -384,6 +398,7 @@ for(ii in 1:length(btstrap)){
   plotCosRR=rbind(plotCosRR,  rr_post)
   plotCosR0=rbind(plotCosR0,  r0_post)
   plotDecline=rbind(plotDecline, decline_post)
+  plotDenv <- rbind(plotDenv, output_rr_denv$r0_out)
 }
 
 c.nume<-function(x){
@@ -392,6 +407,7 @@ c.nume<-function(x){
 plotCosMRR <- apply(plotCosRR,2,c.nume) 
 plotCosMR0 <- apply(plotCosR0,2,c.nume) 
 plotDecline <- apply(plotDecline,2,c.nume) 
+plotMDenv <- apply(plotDenv,2,c.nume) 
 
 dataframe.p3 <- data.frame(date.vals=date.vals[1:tMax], 
                            medRR=plotCosMRR[1,], lciRR=plotCosMRR[2,], uciRR=plotCosMRR[3,],
@@ -412,7 +428,8 @@ plot(dataframe.p3$date.vals, dataframe.p3$medR0, type='l', col=col2, bty="n", yl
 polygon(c(dataframe.p3$date.vals,rev(dataframe.p3$date.vals)),
         c(dataframe.p3$lciR0,rev(dataframe.p3$uciR0)),lty=0,col=col2a)
 axis(side=2, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
-mtext("Reproduction number", side=2, col=1, line=2, cex=1)
+mtext("Basic reproduction number", side=2, col=col2, line=2, cex=1)
+mtext("Effective reproduction number", side=2, col=col7, line=2, cex=1, padj = -1.5)
 lines(dataframe.p3$date.vals, dataframe.p3$medRR, col=col7)
 polygon(c(dataframe.p3$date.vals,rev(dataframe.p3$date.vals)),
         c(dataframe.p3$lciRR,rev(dataframe.p3$uciRR)),lty=0,col=col7a)
@@ -421,7 +438,7 @@ par(new=T)
 plot(dataframe.p3$date.vals, dataframe.p3$temp, type='l', col=rgb(0,0,0.1,alpha=0.4), bty="n", 
      xlab="Date", ylab="", yaxt="n")
 axis(side=4, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
-mtext("Average temperature", side=4, col=1, line=2)
+mtext("Average temperature", side=4, col="gray50", line=2)
 grid(NA,NULL, lty = 1, col = colgrid) 
 mtext("D",side=3, adj=0, font=2)
 
@@ -433,58 +450,100 @@ dev.copy(pdf, paste0("output/fig2_modelOutputs", run.name,".pdf"), 12, 6)
 if(output_simulations==T){
   thetaMax <- thetatab[sim_liktab==max(sim_liktab),] %>% summarise_all(~median(.)) %>% as.numeric()
   thetaMax <- setNames(thetaMax, names(thetatab))
+  DENVthetaMax <- load_DENVfit_1$thetatab[load_DENVfit_1$sim_liktab==max(load_DENVfit_1$sim_liktab),] %>% summarise_all(~median(.)) %>% as.numeric()
+  DENVthetaMax <- setNames(DENVthetaMax, names(load_DENVfit_1$thetatab))
+  
   thetaInitMax <- theta_inittab[sim_liktab==max(sim_liktab), ] %>% 
     summarise_all(~median(.)) %>% 
     as.numeric()
   thetaInitMax <- setNames(thetaInitMax, names(theta_inittab))
   thetaInitMax <- c(thetaInitMax, "c_init"=0, "cd_init"=0)
   names(thetaMax)[names(thetaMax)=="Inf."] <- "Inf"
-
-  zikv_simulation <- function(change_startdate){
+  data <- load.data.multistart.month(Virus = "ZIKV", startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0) 
+    list2env(data,globalenv())  
+  
+  zikv_simulation <- function(change_startdate, denv_version = FALSE){
     ## loop through simulation
-    thetaMax[["intro_mid"]] <- change_startdate
-    sim <- Deterministic_modelR_final_DENVimmmunity(
-      theta=c(thetaMax, theta_denv), 
-      thetaInitMax, 
+    if(denv_version == TRUE){
+      #thetaInitMax[["r_init"]] <- 0.331*342000
+      #thetaInitMax[["s_init"]] <- 342000-thetaInitMax[["r_init"]]
+      theta_use <- DENVthetaMax
+      theta_use[["alpha"]] <- 1
+      theta_use[["Inf"]] <- theta_use[["Inf."]]
+    }else{
+      theta_use <- thetaMax
+    }
+    theta_use[["intro_mid"]] <- change_startdate
+    theta_use[["chi"]] <- 0
+    theta_use[["beta_base"]] <- 0
+    sim <- Deterministic_modelR_final_DENVimmmunity_monthly(
+      theta = c(theta_use, theta_denv), 
+      theta_init = thetaInitMax, 
       seroposdates=seroposdates, 
       include.count=T
       )
-    return(list(zika_trace = sim$C_trace, denv_trace = sim$CD_trace))
+    return(list(zika_trace = sim$C_trace, 
+                denv_trace = sim$CD_trace,
+                zika_rec = sim$R_trace))
   }
-  
-  intros <- seq(365,365*2,90)
+
+time.vals <- time.vals.week  
+dt <- 7
+  intros <- seq(365*1.5,365*2.3,90)
   zika_model_sims <- sapply(intros, function(xx){
-    zikv_simulation(xx)$zika_trace})
-  infections_series <- as.data.frame(zika_model_sims)
-  names(infections_series) <- modelSt+intros
-  infections_series$time_vals <- row(infections_series)[,1]*7
-  infections_series$date_vals <- infections_series$time_vals + startdate
-  infections_series$denv_vals <- zikv_simulation(1)$denv_trace
+    zikv_simulation(xx)$zika_trace
+    })
+  dengue_model_sims <- sapply(intros, function(xx){
+    zikv_simulation(xx, denv_version = TRUE)$zika_trace
+    })
+  zika_sims <- as.data.frame(zika_model_sims)
+  dengue_sims <- as.data.frame(dengue_model_sims)
+  names(zika_sims) <- names(dengue_sims) <- startdate + intros
+  zika_sims$time_vals <- dengue_sims$time_vals <- row(infections_series)[,1]*dt
+  zika_sims$date_vals <- dengue_sims$date_vals <- zika_sims$time_vals + startdate
+  #zika_sims$denv_vals <- dengue_sims$denv_vals <- zikv_simulation(1)$denv_trace
   
-  short_infections_series <- infections_series %>%
-    filter(date_vals >= as.Date("2013-10-01") & date_vals <= as.Date("2016-06-01"))
-  seasonal_wave <- sapply(short_infections_series$time_vals, function(xx){seasonal_f(xx, amp = thetaMax[["beta_v_amp"]], mid=thetaMax[["beta_v_mid"]])})
+  zika_sims_short <- zika_sims %>%
+    filter(date_vals >= as.Date("2014-05-01") & date_vals <= as.Date("2017-01-01")) #%>%
+    #mutate_at(vars(-c("time_vals", "date_vals")), ~ifelse(. <= 0, -1, log(.)))
+  dengue_sims_short <- dengue_sims %>%
+    filter(date_vals >= as.Date("2014-05-01") & date_vals <= as.Date("2017-01-01")) #%>%
+    #mutate_at(vars(-c("time_vals", "date_vals")), ~ifelse(. <= 0, -1, log(.)))
+    
+  seasonal_wave <- sapply(zika_sims_short$time_vals, function(xx){seasonal_f(xx, amp = thetaMax[["beta_v_amp"]], mid=thetaMax[["beta_v_mid"]])})
   
-  sims <- dim(short_infections_series)[2]-3
-  pdf(here::here("output/fig3_simulations.pdf"), width = 8, height = 6)
-  par(mfcol=c(sims, 1), mar=c(2,4,1,4)+0.1)
-  ylimmax <- short_infections_series %>% pivot_longer(cols=starts_with("2")) %>% summarise(max(value)) %>% pull()
+  sims <- dim(zika_sims_short)[2]-2
+  pdf(here::here("output/fig3_simulations2.pdf"), width = 6, height = 6)
+  par(mfcol=c(sims, 1), mar=c(2,4,1,6.5)+0.1)
+  ylimmaxZ <- zika_sims_short %>% pivot_longer(cols=starts_with("2")) %>% summarise(max(value)) %>% pull()
+  ylimmaxD <- dengue_sims_short %>% pivot_longer(cols=starts_with("2")) %>% summarise(max(value)) %>% pull()
+  ylimmax <- max(ylimmaxZ, ylimmaxD)
   ylimits <- c(0, round(ylimmax*1.1,0))
   for(ii in 1:sims){
-    plot_date_series <- short_infections_series$date_vals
+    plot_date_series <- zika_sims_short$date_vals
     ##
-    #plot(short_infections_series$date_vals, seasonal_wave, col="gray85", yaxt="n", ylab="", xaxt="n", xlab="", type='l', ylim=c(0,2), bty="n", lwd = 1.25)
+    #plot(zika_sims_short$date_vals, seasonal_wave, col="gray85", yaxt="n", ylab="", xaxt="n", xlab="", type='l', ylim=c(0,2), bty="n", lwd = 1.25)
     #par(new=T)
-    plot(short_infections_series$date_vals, short_infections_series[,ii], type="l", col=col1, ylab="", xlab="Date", ylim=ylimits, xaxt="n", bty="n", lwd = 2)
-    mtext("Infections", side=2, line=2, col = col1)
-    text(as.Date("2016-01-01"),ylimmax*(7/8), paste("Attack Rate","=",signif(sum(short_infections_series[,ii])/thetaMax[["npop"]],2)))
-    lines(short_infections_series$date_vals, short_infections_series$denv_vals, lwd = 2 , col = col4)
+    plot(zika_sims_short$date_vals, zika_sims_short[,ii], type="l", col=col1, ylab="", xlab="Date", ylim=ylimits, axes = F, bty="n", lwd = 2)
+    mtext("Zika infections", side = 4, line=2, col = col1, padj = 1.5)
+    mtext("Dengue infections", side = 4, line=2, col = col7, padj = 2.8)
+    text(as.Date("2016-01-01"),ylimmax*(7/8), paste("Attack Rate","=",signif(sum(zika_sims_short[,ii])/thetaMax[["npop"]],2)), col = col1)
+    text(as.Date("2016-01-01"),ylimmax*(6/8), paste("Attack Rate","=",signif(sum(dengue_sims_short[,ii])/thetaMax[["npop"]],2)), col = col7)
+    #lines(zika_sims_short$date_vals, zika_sims_short$denv_vals, lwd = 2 , col = col7)
+    lines(dengue_sims_short$date_vals, dengue_sims_short[,ii], type="l", col=col7, ylab="", xlab="Date", ylim=ylimits, xaxt="n", bty="n", lwd = 2)
+    axis(side = 4)
+    # aty <- log(c(1,10,100,1000,1e4,1e5))
+    # labels <- sapply(aty,function(i)
+    #   as.expression(round(exp(i)))
+    # )
+    #axis(side=4, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1, at=aty,labels=labels, las = 2)
     par(new=T)
-    intros_series <- sapply(short_infections_series$time_vals, function(xx){intro_f(xx, mid = intros[ii], width = thetaMax[["intro_width"]], base = thetaMax[["intro_base"]])})
-    plot(short_infections_series$date_vals, intros_series, type="l", yaxt="n", ylab="", xaxt="n", xlab="", col = col2, ylim=c(0,4), lty=2, bty="n", lwd = 1.25)
+    intros_series <- sapply(zika_sims_short$time_vals, function(xx){intro_f(xx, mid = intros[ii], width = thetaMax[["intro_width"]], base = thetaMax[["intro_base"]])})
+    plot(zika_sims_short$date_vals, intros_series, type="l", yaxt="n", ylab="", ylim = c(0, ceiling(thetaMax[["intro_base"]]/4)), xaxt="n", xlab="", col = col2, lty=1, bty="n", lwd = 1.25)
     axis.Date(side=1, at=seq.Date(min(plot_date_series), max(plot_date_series)+180, by = "6 months"), "months", format = "%b %Y")
-    axis(side=4)
-    mtext("Introductions", side=4, line=2, col = col2)
+    mtext("Introductions", side = 2, line=2, col = col2)
+    axis(side = 2)
+    text(labels = as.character(intros[ii]+startdate), x = intros[ii]+startdate, y = max(intros_series)*1.1, col = col2, pos = 3)
     mtext(LETTERS[ii], side=3, adj=0, font=2)
     grid(NA,NULL, lty = 1, col = colgrid) 
   }
@@ -506,6 +565,7 @@ if(output_diagnostics==T){
                                               "rec0" = "Initial immune proportion",
                                               "chi" = "Cross-protection from DENV3 outbreak",
                                               "epsilon" = "False positive rate in assay",
+                                              "alpha" = "Sensitivity of assay",
                                               "rho" = "Waning detectable antibody titres",
                                               "intro_mid" = "Midpoint of ZIKV introduction",
                                               "intro_base" = "Peak of introductions wave",
