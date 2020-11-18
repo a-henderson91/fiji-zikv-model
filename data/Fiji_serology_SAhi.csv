@@ -11,9 +11,9 @@ DEN3,c,total,130,115,
 DEN3,a,pos,87,88,
 DEN3,a,neg,92,116,
 DEN3,a,total,179,204,
-ZIKV,c,pos,30,73,41
-ZIKV,c,neg,428,254,280
-ZIKV,c,total,458,327,321
+ZIKV,c,pos,30,73,47
+ZIKV,c,neg,428,254,273
+ZIKV,c,total,458,327,320
 ZIKV,a,pos,0,0,0
 ZIKV,a,neg,0,0,0
 ZIKV,a,total,0,0,0
