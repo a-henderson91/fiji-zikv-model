@@ -31,7 +31,7 @@ include.sero.likelihood <- T # whether to include serological data in likelihood
 vector.control          <- T # whether to reduce transmission in March2014 when vector control campaign was in effect 
 include.2014.control    <- T # if False then beta_base set to 0
 limit.to.2013           <- F # if True then prior on intro time is limited to 365 (i.e. ZIKV starts in 2013)
-run.name <- "1116_SensSpec_lo"
+run.name <- "1116_SensSpec"
 model1_name <- "1112_model1"
 dt <- (7*52)/12
   
@@ -45,7 +45,7 @@ mcmc.burn <- 0.4
 locationtab <- c("Zika2016","Central2014") 
 dataTab <- c("Central_Fiji_2016Z_timeseries","Central_2014_timeseries") 
 virusTab <- c("ZIKV","DEN3")
-serology.excel <- "Fiji_serology_SAlo"
+serology.excel <- "Fiji_serology"
 init.conditions.excel <- "thetaR_IC_zika"
 #iiH <- 1
 locnn <- 2 ## needs to be >1 to set up results matrix not vector

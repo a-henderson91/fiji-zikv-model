@@ -76,7 +76,6 @@ Deterministic_modelR_final_DENVimmmunity_monthly <- function(theta, theta_init, 
       }else{
         binom.lik=0
         }
-    ln.denv <- length(denv.timeseries)
     ln.full <- length(y.vals)
     first.zikv <- min(which(y.vals>0))
     likelihood <- sum(binom.lik) + sum(log(dnbinom(y.vals,

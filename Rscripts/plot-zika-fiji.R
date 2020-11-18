@@ -4,7 +4,7 @@
 # github.com/a-henderson91/fiji-zikv-model
 # - - - - - - - - - - - - - - - - - - - - - - - 
 
-virus <- "ZIKV"  # DEN3 or ZIKV
+virus <- "DEN3"  # DEN3 or ZIKV
 
 output_simulations <- 
 output_diagnostics <- T
@@ -32,7 +32,7 @@ labelN <- 1
 m.tot <- length(list.files(path = here::here(post_file_path), pattern = paste0("*", run.name)))
 load_posterior_1 <- load.posteriors(load.run.name = run.name, file.path = post_file_path, iiH, mcmc.burn = mcmc.burn)
   list2env(load_posterior_1,globalenv())
-
+  
 load_DENVfit_1 <- load.posteriors(load.run.name = model1_name, file.path = "posterior_denv2014fit", iiH = 2, mcmc.burn = mcmc.burn)
 
 # load data --------------------------------------------------------------
@@ -156,6 +156,7 @@ for(ii in 1:btsp){
   rvector[ii,] <- (r_trace_tab[pick,1:tMax]/thetatab[pick,]$npop) + ((1- (r_trace_tab[pick,1:tMax]/thetatab[pick,]$npop))*epsilon)
   introvector[ii,] <- sapply(time.vals[1:tMax], function(xx){intro_f(xx, mid = thetatab[pick,'intro_mid'], width = thetatab[pick,'intro_width'], base = thetatab[pick,'intro_base'])})
 }
+
 ## plot posterior of cases
 tMaxDenv <- length(load_DENVfit_1$c_trace_tab[1,])
 denvvector <- matrix(NA,nrow=btsp,ncol=tMaxDenv)
@@ -311,14 +312,19 @@ lines(data.frame2c$date.vals, data.frame2c$medS, col=col4, lwd = 2)
 polygon(c(data.frame2c$date.vals, rev(data.frame2c$date.vals)), 
         c(data.frame2c$ciS1,rev(data.frame2c$ciS2)), lty=0, col=col4a)
 axis(side=2, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
-mtext("Number susceptible", side=2, line=2, col=col4)
+mtext("Number susceptible", side=2, line=2, col=col4, adj = 0.8 )
 par(new = T)
-plot(data.frame2c$date.vals, data.frame2c$med_Inf, col=0, lwd = 2, type = "l", bty = "n", xaxt = "n", yaxt = "n", ylab = "", xlab = "", ylim = c(0, max(data.frame2c$ci_inf2)))
+plot(data.frame2c$date.vals, data.frame2c$med_Inf,
+     col=0, lwd = 2, type = "l", bty = "n", xaxt = "n", yaxt = "n", ylab = "", xlab = "", ylim = c(0, max(data.frame2c$ci_inf2)))
 lines(data.frame2c$date.vals, data.frame2c$med_Inf, col=col1, lwd = 2)
 polygon(c(data.frame2c$date.vals, rev(data.frame2c$date.vals)), 
         c(data.frame2c$ci_inf1,rev(data.frame2c$ci_inf2)), lty=0, col=col1a)
-axis(side=4, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
-mtext("(log) Number infected", side=4, line=2, col=col1)
+aty <- log(c(1,10,100,1000,10000))
+labels <- sapply(aty,function(i)
+  as.expression(round(exp(i)))
+)
+axis(side=4, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1, at=aty,labels=labels, las = 2)
+mtext("Number infected", side=4, line=2, col=col1, adj = 0.2)
 abline(h = 0, lty = 2, col = "gray70")
 grid(NA,NULL, lty = 1, col = colgrid) 
 mtext("C",side=3, adj=0, font=2)
@@ -335,7 +341,7 @@ for(ii in 1:length(btstrap)){
   date0 <- (startdate-date.vals[1]) %>% as.numeric() 
   
   beta_ii <- seasonal_f(time.V[1:tMax], date0, amp=thetatab[b_ii,'beta_v_amp'], mid=thetatab[b_ii,'beta_v_mid'])
-  decline_ii <- control_f(time.V[1:tMax], base=thetatab[b_ii, "beta_base"], mid=thetatab[b_ii,"beta_mid"], width=thetatab[b_ii,"beta_width"])
+  decline_ii <- control_f(time.V[1:tMax], base = thetatab[b_ii, "beta_base"], mid = thetatab[b_ii,"beta_mid"], width = thetatab[b_ii,"beta_width"])
   b_vary <- beta_ii
   
   s_pick <- s_trace_tab[b_ii,1:tMax]/thetatab$npop[b_ii] 
@@ -387,6 +393,9 @@ lines(dataframe.p3$date.vals, dataframe.p3$medRR, col=col7)
 polygon(c(dataframe.p3$date.vals,rev(dataframe.p3$date.vals)),
         c(dataframe.p3$lciRR,rev(dataframe.p3$uciRR)),lty=0,col=col7a)
 abline(h=1, lty=2)    
+lines(dataframe.p3$date.vals, dataframe.p3$medD, col = col3)
+polygon(c(dataframe.p3$date.vals,rev(dataframe.p3$date.vals)),
+        c(dataframe.p3$lciD,rev(dataframe.p3$uciD)),lty=0,col=col3a)
 par(new=T)
 plot(dataframe.p3$date.vals, dataframe.p3$temp, type='l', col=rgb(0,0,0.1,alpha=0.4), bty="n", 
      xlab="Date", ylab="", yaxt="n")
@@ -625,4 +634,5 @@ colnames(param1)=c(
   "max Likelihood",
   "DIC")
 t(param1)
-write.csv(t(param1),here::here("output","paramA.csv"))
+write.csv(t(param1),here::here("output",paste0("paramA",run.name,".csv")))
+          

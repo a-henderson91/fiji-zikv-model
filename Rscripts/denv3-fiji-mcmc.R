@@ -11,11 +11,14 @@ r_functions <- list.files(here::here("Rfunctions/"), pattern="*.R")
 sapply(here::here("Rfunctions", r_functions), source, .GlobalEnv)
 
 # load data and setup with fixed DENV intro date Oct 27th 2013
-prior_vectorcontrol <- function(x){dunif(x,0,1)}
+prior_vectorcontrol <- function(x){
+  dnorm(x, mean = 0.57, sd = 0.15) ## based on Kucharski et al. 2018 Elife
+}
 denv_data <- load.data.multistart(Virus = "DEN3", startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0)
   list2env(denv_data,globalenv())
 denv.timeseries <- denv_data$y.vals
 denv.dates <- denv_data$date.vals
+
 load(file=here::here("data/theta_denv.RData"))
 theta_denv
 
@@ -31,6 +34,8 @@ source(here::here("Rscripts/prior_distributions.R"))
 
 priorIntro <- function(x){dunif(x, min=0, max=307)} ## DENV import mid point is 2013-11-07 (first case reported) at latest
 priorInitInf <- function(x){dunif(x, min=0, max=1000)} ## DENV import max is 1000 in one day
+priorEpsilon <- function(x){dtruncnorm(x, a=0, b=1, mean=0, sd=0.15)} ## 100% sensitivity and specificity in control panel 
+priorAlpha <- function(x){dtruncnorm(x, a=0, b=1, mean=1, sd=0.15)}
 
 # load climate data -------------------------------------------------------
 weather.data <- read.csv(here::here("data/suva-temp.csv"), stringsAsFactors = T) # Load DLI dengue data
@@ -143,12 +148,13 @@ iiH <- 2
 source(here::here("Rscripts/den3-single-simulation.R"))
 initial_beta_h <- thetaAlltab[1,iiH,][["beta_h"]]
 denv3_single_sim(initial_beta_h)
-if(denv3_single_sim(initial_beta_h) == -Inf){
-  t_rate <- seq(0.3, 0.8, 0.1)
+#if(denv3_single_sim(initial_beta_h) == -Inf){
+  t_rate <- seq(0.3, 0.6, 0.01)
   lik_search <- sapply(t_rate, function(xx){denv3_single_sim(xx)})
   max_beta_h <- t_rate[which(lik_search==max(lik_search))]
   thetaAlltab[1,iiH,"beta_h"] <- max_beta_h[1]
-}
+denv3_single_sim(thetaAlltab[1,iiH,"beta_h"])
+#}
 thetaAlltab[1,,]
 diag(cov_matrix_thetaAll)
 

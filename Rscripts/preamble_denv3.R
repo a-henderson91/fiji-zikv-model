@@ -28,10 +28,11 @@ seasonal.transmission   <- T # whether to estimate seasonal transmission or not.
 include.sero.likelihood <- T
 vector.control          <- T # 
 include.2014.control    <- T # if False then beta_base set to 0
-run.name <- "1112_model1" 
+run.name <- "1118_model1" 
+dt <- 7
 
 ## MCMC parameters 
-MCMC.runs <- 25000 #number of MCMC iterations 
+MCMC.runs <- 1000 #number of MCMC iterations 
 thinning.parameter <- 1
 multichain <- c(1:3)  # n chains to run in parallel
 mcmc.burn <- 0.4
@@ -86,21 +87,21 @@ col7=rgb(0.02,0.3,0.02,0.8)
 col7a=rgb(0.02,0.3,0.02,0.4)
 
 
-col1 <- "#3880bf"
-col2 <- "#ef286e"
-col3 <- "#c06b74"
-col4 <- "#3eeaef"
-col5 <- "#881448"
-col6 <- "#0ba47e"
-col7 <- "#1e5c4a"
-
-col1a <- alpha("#3880bf" ,0.4)
-col2a <- alpha("#ef286e" ,0.4)
-col3a <- alpha("#c06b74" ,0.4)
-col4a <- alpha("#3eeaef" ,0.4)
-col5a <- alpha("#881448" ,0.4)
-col6a <- alpha("#0ba47e" ,0.4)
-col7a <- alpha("#1e5c4a" ,0.4)
+# col1 <- "#3880bf"
+# col2 <- "#ef286e"
+# col3 <- "#c06b74"
+# col4 <- "#3eeaef"
+# col5 <- "#881448"
+# col6 <- "#0ba47e"
+# col7 <- "#1e5c4a"
+# 
+# col1a <- alpha("#3880bf" ,0.4)
+# col2a <- alpha("#ef286e" ,0.4)
+# col3a <- alpha("#c06b74" ,0.4)
+# col4a <- alpha("#3eeaef" ,0.4)
+# col5a <- alpha("#881448" ,0.4)
+# col6a <- alpha("#0ba47e" ,0.4)
+# col7a <- alpha("#1e5c4a" ,0.4)
 
 theme_zika_fiji <- function(){
   theme(title = element_text(size = 12, face = "bold"),

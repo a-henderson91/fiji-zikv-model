@@ -34,6 +34,9 @@ denv3_single_sim <- function(transmission_rate){
   if(!is.na(theta[['epsilon']])){
     epsilon <- theta[['epsilon']]}else{
       epsilon <- 0}
+  if(!is.na(theta[['alpha']])){
+    alpha <- theta[['alpha']]}else{
+      alpha <- 1}
   if(!is.na(theta[['rho']])){
     theta[["rho"]] <- 1/theta[['rho']]}else{
       theta[["rho"]] <- 0}
@@ -72,16 +75,16 @@ denv3_single_sim <- function(transmission_rate){
   date0 = (model_st-date.vals[1]) %>% as.numeric() 
   
   beta_ii <- seasonal_f(time.V[1:tMax], date0, amp=theta[["beta_v_amp"]], mid=theta[["beta_v_mid"]])
-  #decline_ii <- decline_f(time.V[1:tMax], mid=theta[["beta_mid"]], width=theta[["beta_grad"]], base=theta[["beta_base"]])
   decline_ii <- control_f(time.V[1:tMax], base=theta[["beta_base"]], mid=theta[["beta_mid"]], width=theta[["beta_width"]])
-  b_vary = beta_ii#*decline_ii
+  b_vary = beta_ii
   
   s_pick = S_traj[1:tMax]/342000
   c_pick = casecount[1:tMax]/342000
   r_pick = R_traj[1:tMax]/342000
   theta[["Inf."]] <- theta[["Inf"]]
+  theta[["mu"]] <- 67.25
   
-  output_rr <- calculate_r0(th_in = as.data.frame(t(theta)),sus = s_pick, b_vary=b_vary)
+  output_rr <- calculate_r0(th_in = as.data.frame(t(theta)),sus = s_pick, b_vary = b_vary)
   
   start.rr <- output_rr$rr_out[min(which(output_rr$rr_out>0))]
   output_rr$rr_out[1:(min(which(output_rr$rr_out>0))-1)] <- start.rr
@@ -95,14 +98,25 @@ denv3_single_sim <- function(transmission_rate){
   # Compute likelihood ------------------------------------------------------
   # Calculate seropositivity at pre-specified dates and corresponding likelihood
   epsilon <- theta[["epsilon"]]
+  alpha <- theta[["alpha"]]
+
   i=1; seroP=NULL; binom.lik=NULL
-  for(date in seroposdates){
-      seroP[i] <-  (min(R_traj[date.vals<date+3.5 & date.vals>date-3.5])/theta[["npop"]]) + 
-        (1 - min(R_traj[date.vals<date+3.5 & date.vals>date-3.5])/theta[["npop"]])*epsilon
+  if(include.sero.likelihood==T){
+    for(date in seroposdates){
+      time_elapsed <- min(time.vals[date.vals<date+(dt/2) & date.vals>date-(dt/2)])
+      adjusted_pop <- theta[["npop"]]-(time_elapsed*theta[["mu"]]*theta[["npop"]])+(time_elapsed*theta[["eta"]]*theta[["npop"]])
+      modelled_R <- (min(R_traj[date.vals<date+(dt/2) & date.vals>date-(dt/2)])/adjusted_pop)
+      detected_positives <- modelled_R*alpha    ## identify alpha% of the actual positives
+      false_positives <- (1-modelled_R)*epsilon ## falsely record epsilon% of the actual negatives as positives
+      seroP[i] <- detected_positives + false_positives
+      seroP[i] <- (min(R_traj[date.vals<date+(dt/2) & date.vals>date-(dt/2)])/theta[["npop"]]) + 
+        (1 - min(R_traj[date.vals<date+(dt/2) & date.vals>date-(dt/2)])/theta[["npop"]])*epsilon
       binom.lik[i] <- (dbinom(nLUM[i], size=nPOP[i], prob=seroP[i], log = T))
-    i <- i+1
+      i <- i+1
+    }
+  }else{
+    binom.lik=0
   }
-  
   ln.full <- length(y.vals)
   likelihood <- sum(binom.lik) + sum(log(dnbinom(y.vals,
                                                  mu=theta[["rep"]]*(casecount),

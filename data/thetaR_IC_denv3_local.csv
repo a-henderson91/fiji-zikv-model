@@ -1,5 +1,5 @@
 param,Central2014,Zika2016
-beta_h,0.6,NA
+beta_h,0.22,NA
 beta_v_amp,0.1,NA
 beta_v_mid,0.99,NA
 rep,0.12,NA
@@ -13,11 +13,12 @@ beta_base,0.58,NA
 beta_grad,0.2,NA
 beta_mid,470,NA
 beta_width,20,NA
-epsilon,0.05,NA
+epsilon,0,NA
+alpha,1,NA
 rho,NA,NA
 chi,NA,NA
 omega_d,NA,NA
-intro_mid,292,NA
+intro_mid,271,NA
 intro_base,400,NA
 intro_width,0.25,NA
 beta_d,0.8356012,NA
