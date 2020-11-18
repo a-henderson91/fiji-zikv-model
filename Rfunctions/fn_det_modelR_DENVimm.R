@@ -26,6 +26,9 @@ Deterministic_modelR_final_DENVimmmunity <- function(theta, theta_init, location
     if(!is.na(theta[['epsilon']])){
       epsilon <- theta[['epsilon']]}else{
         epsilon <- 0}
+    if(!is.na(theta[['alpha']])){
+      alpha <- theta[['alpha']]}else{
+        alpha <- 0}
     if(!is.na(theta[['rho']])){
       theta[["rho"]] <- 1/theta[['rho']]}else{
         theta[["rho"]] <- 0}

@@ -26,6 +26,9 @@ Deterministic_modelR_final_DENVimmmunity_monthly <- function(theta, theta_init, 
     if(!is.na(theta[['epsilon']])){
       epsilon <- theta[['epsilon']]}else{
         epsilon <- 0}
+    if(!is.na(theta[['alpha']])){
+      alpha <- theta[['alpha']]}else{
+        alpha <- 0}
     if(!is.na(theta[['rho']])){
       theta[["rho"]] <- 1/theta[['rho']]}else{
         theta[["rho"]] <- 0}
@@ -59,6 +62,12 @@ Deterministic_modelR_final_DENVimmmunity_monthly <- function(theta, theta_init, 
     i=1; seroP=NULL; binom.lik=NULL
     if(include.sero.likelihood==T){
       for(date in seroposdates){
+        time_elapsed <- min(time.vals[date.vals<date+(dt/2) & date.vals>date-(dt/2)])
+        adjusted_pop <- theta[["npop"]]-(time_elapsed*theta[["mu"]]*theta[["npop"]])+(time_elapsed*theta[["eta"]]*theta[["npop"]])
+        modelled_R <- (min(R_traj[date.vals<date+(dt/2) & date.vals>date-(dt/2)])/adjusted_pop)
+          detected_positives <- modelled_R*alpha    ## identify alpha% of the actual positives
+          false_positives <- (1-modelled_R)*epsilon ## falsely record epsilon% of the actual negatives as positives
+          seroP[i] <- detected_positives + false_positives
           seroP[i] <- (min(R_traj[date.vals<date+(dt/2) & date.vals>date-(dt/2)])/theta[["npop"]]) + 
             (1 - min(R_traj[date.vals<date+(dt/2) & date.vals>date-(dt/2)])/theta[["npop"]])*epsilon
           binom.lik[i] <- (dbinom(nLUM[i], size=nPOP[i], prob=seroP[i], log = T))

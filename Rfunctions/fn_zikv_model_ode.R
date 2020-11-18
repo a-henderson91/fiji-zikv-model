@@ -51,15 +51,15 @@ zikv_model_ode <- function(theta, init.state, time.vals.sim) {
       
       # Human population
       Npop = S + E + I + R
-      dS  =  eta*Npop - S*(lambda_h*I/Nsize)*Ipos - chi*Sd*(beta_d*Id/Nsize) + chi*(2*omega_d*T2d) - mu*S
-      dE  =  S*(lambda_h*I/Nsize)*Ipos - alpha_h*E - mu*E
+      dS  =  eta*Npop - S*(lambda_h*I/Npop)*Ipos - chi*Sd*(beta_d*Id/Npop) + chi*(2*omega_d*T2d) - mu*S
+      dE  =  S*(lambda_h*I/Npop)*Ipos - alpha_h*E - mu*E
       dI  = alpha_h*E  - gamma*I + intro_zikv - mu*I
       dR  = gamma*I - rho*R - mu*R
       dC  = alpha_h*E
       
       # Denv infection and temporary immunity
-      dSd = -Sd*(beta_d*Id/Nsize)*Idpos
-      dEd = Sd*(beta_d*Id/Nsize)*Idpos - alpha_d*Ed 
+      dSd = -Sd*(beta_d*Id/Npop)*Idpos
+      dEd = Sd*(beta_d*Id/Npop)*Idpos - alpha_d*Ed 
       dId = alpha_d*Ed - gamma_d*Id + initDenv 
       dT1d = gamma_d*Id - 2*omega_d*T1d
       dT2d = 2*omega_d*T1d - 2*omega_d*T2d

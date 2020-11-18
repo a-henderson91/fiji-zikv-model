@@ -8,7 +8,8 @@
 ComputePrior <- function(iiH, thetaAlltab, thetaAllstar, covartheta){
   # Compute prior of proposed parameter set theta
   p_theta_star =  priorChi(thetaAllstar["chi"])*
-                  priorepsilon(thetaAllstar["epsilon"])*
+                  priorEpsilon(thetaAllstar["epsilon"])*
+                  priorAlpha(thetaAllstar["alpha"])*
                   priorBeta(thetaAllstar["beta_h"])*
                   priorInitInf(thetaAllstar["intro_base"])*
                   priorIntro(thetaAllstar["intro_mid"])
@@ -27,7 +28,8 @@ ComputePrior <- function(iiH, thetaAlltab, thetaAllstar, covartheta){
   }
   # Compute prior of current parameter set theta
   p_theta = priorChi(thetaAlltab["chi"])*
-            priorepsilon(thetaAlltab["epsilon"])*
+            priorEpsilon(thetaAlltab["epsilon"])*
+            priorAlpha(thetaAlltab["alpha"])*
             priorBeta(thetaAlltab["beta_h"])*
             priorInitInf(thetaAlltab["intro_base"])*
             priorIntro(thetaAlltab["intro_mid"])

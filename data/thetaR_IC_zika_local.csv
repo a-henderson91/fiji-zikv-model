@@ -15,8 +15,8 @@ beta_width,14,NA
 chi,NA,0.3
 omega_d,NA,30
 epsilon,NA,0.001
+alpha,NA,0.9
 rho,NA,450
 intro_mid,0,600
 intro_base,0,2
 intro_width,0,10
-alpha,NA,0.2

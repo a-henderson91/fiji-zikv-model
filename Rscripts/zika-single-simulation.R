@@ -28,11 +28,9 @@ zika_single_sim <- function(transmission_rate){
   
   # time series, date series and case data
   # adjust when DENV and ZIKV introductions begin (depending on when model start date is): n.b. DENV3 fixed to 2013-10-27
-  theta[["denv_start_point"]] <- as.Date("2013-10-27") - startdate
+  theta[["denv_start_point"]] <- as.Date("2013-10-29") - startdate
+  
   theta[["zika_start_point"]] <- theta[["intro_mid"]]
-  if(!is.na(theta[['epsilon']])){
-    epsilon <- theta[['epsilon']]}else{
-      epsilon <- 0}
   if(!is.na(theta[['rho']])){
     theta[["rho"]] <- 1/theta[['rho']]}else{
       theta[["rho"]] <- 0}
@@ -54,15 +52,15 @@ zika_single_sim <- function(transmission_rate){
   
   # Match compartment states at sim.vals time
   S_traj <- output[match(time.vals,output$time),"s_init"]
-  R_traj <- output[match(time.vals,output$time),"r_init"]
   I_traj <- output[match(time.vals,output$time),"i_init"]
+  R_traj <- output[match(time.vals,output$time),"r_init"]
   cases1 <- output[match(time.vals,output$time),"c_init"]
   casesD <- output[match(time.vals,output$time),"cd_init"]
   casecountD <- casesD-c(0,casesD[1:(length(time.vals)-1)])
   casecount <- cases1-c(0,cases1[1:(length(time.vals)-1)])
-  casecount[casecount<0] <- 0
   cases_est <- ReportC(casecount, theta[["rep"]], 1/theta[["repvol"]] )
   cases_est[cases_est==0] <- NA
+  casecount[casecount<0] <- 0
 
   # calculate R0 ------------------------------------------------------------
   tMax <- length(casecount)
@@ -77,9 +75,8 @@ zika_single_sim <- function(transmission_rate){
   b_vary = beta_ii#*decline_ii
   
   s_pick = S_traj[1:tMax]/342000
-  c_pick = casecount[1:tMax]/342000
-  r_pick = R_traj[1:tMax]/342000
   theta[["Inf."]] <- theta[["Inf"]]
+  theta[["mu"]] <- 67.25
   
   output_rr <- calculate_r0(th_in = as.data.frame(t(theta)), sus = s_pick, b_vary = b_vary)
   
@@ -119,7 +116,6 @@ zika_single_sim <- function(transmission_rate){
   likelihood <- sum(binom.lik) + sum(log(dnbinom(y.vals,
                                                  mu=theta[["rep"]]*(casecount),
                                                  size=1/theta[["repvol"]]))) 
-  
   # Plot simulation ---------------------------------------------------------
   plot(date.vals, casecount, type='l', col=4, lwd = 2, xlab="Year", ylab="Infections (cases)",ylim = c(0, 15000),
        main=paste0("Start: ", startdate+theta[["intro_mid"]],"   |   lik:", signif(likelihood,4),"  |  medR0: ", signif(median(r0_post),3), " | intro:", round(total_intro,0)))
@@ -138,11 +134,11 @@ zika_single_sim <- function(transmission_rate){
   par(new=T)
   adjusted_pop <- sapply(time.vals, function(xx){theta[["npop"]]-(xx*mu*theta[["npop"]])+(xx*eta*theta[["npop"]])})
     modelled_R_traj <- R_traj/adjusted_pop
-      false_pos <- (1-modelled_R_traj)*epsilon
-      false_neg <- (modelled_R_traj)*(alpha/(1-alpha))
-  recorded_sero <- modelled_R_traj + ## what the model thinks happened in reality
-    false_pos - ## add in the negatives that will test positive 
-    false_neg ## remove the positives that are NOT picked up by the assay
+      detected_positives <- modelled_R_traj*alpha    ## identify alpha% of the actual positives
+      false_positives <- (1-modelled_R_traj)*epsilon ## falsely record epsilon% of the actual negatives as positives
+      
+  recorded_sero <- false_positives + detected_positives
+  
   plot(date.vals, recorded_sero, type='l', col=22, yaxt='n', xaxt='n', xlab="", ylab="", ylim=c(0,1))
   lines(date.vals, modelled_R_traj, type='l', col=22, lty = 2, yaxt='n', xaxt='n', xlab="", ylab="", ylim=c(0,1))
   points(seroposdates, (nLUM/nPOP), col=4, pch=1)
