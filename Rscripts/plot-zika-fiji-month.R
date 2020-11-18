@@ -139,21 +139,40 @@ svector <- matrix(NA,nrow=btsp,ncol=tMax)
 cvector <- matrix(NA,nrow=btsp,ncol=tMax)
 ivector <- matrix(NA,nrow=btsp,ncol=tMax)
 rvector <- matrix(NA,nrow=btsp,ncol=tMax)
+rvectorAdj <- matrix(NA,nrow=btsp,ncol=tMax)
 introvector <- matrix(NA,nrow=btsp,ncol=tMax)
 cvectorDENV <- matrix(NA,nrow=btsp,ncol=tMax)
 ln_denv <- length(denv.cases)
 first_zikv <- min(which(y.vals>0))
+
+## adjsut population
+mu <- 1/(thetatab[1,"mu"]*365.25) %>% as.numeric()
+eta <- 2.5*mu
+npop <- thetatab[1,"npop"] %>% as.numeric()
+adjusted_pop <- sapply(time.vals[1:tMax], function(xx){npop-(xx*mu*npop)+(xx*eta*npop)})
 for(ii in 1:btsp){
   pick <- sample(picks, 1)
   if(!is.na(thetatab[pick,'epsilon'])){
     epsilon <- thetatab[pick,'epsilon']
   }else{
-    epsilon=0
+    epsilon <- 0
+  }
+  if(!is.na(thetatab[pick,'alpha'])){
+    alpha <- thetatab[pick,'alpha']
+  }else{
+    alpha <- 0
   }
   cvector[ii,] <- ReportC(c_trace_tab[pick,1:tMax],thetatab[pick,'rep'],thetatab[pick,'repvol'])
   svector[ii,] <- s_trace_tab[pick,1:tMax]
   ivector[ii,] <- c_trace_tab[pick,1:tMax]
-  rvector[ii,] <- (r_trace_tab[pick,1:tMax]/thetatab[pick,]$npop) + ((1- (r_trace_tab[pick,1:tMax]/thetatab[pick,]$npop))*epsilon)
+  rvector[ii,] <- (r_trace_tab[pick,1:tMax]/adjusted_pop)
+  ## 
+  modelled_R_traj <- rvector[ii,]
+      false_pos <- (1-modelled_R_traj)*epsilon  ## falsely record epsilon% of the actual negatives as positives
+      detected_pos <- (modelled_R_traj)*(alpha)     ## identify alpha% of the actual positives
+  recorded_sero <- true_pos + ## what the model thinks happened in reality
+    false_pos ## add in the negatives that will test positive 
+  rvectorAdj[ii,] <- (recorded_sero)
   introvector[ii,] <- sapply(time.vals[1:tMax], function(xx){intro_f(xx, mid = thetatab[pick,'intro_mid'], width = thetatab[pick,'intro_width'], base = thetatab[pick,'intro_base'])})
 }
 ## plot posterior of cases
@@ -180,6 +199,11 @@ ciP1_R <- apply(rvector,2,function(x){quantile(x,0.025, na.rm=T)});
 ciP2_R <- apply(rvector,2,function(x){quantile(x,0.975, na.rm=T)}); 
 ciR150 <- apply(rvector,2,function(x){quantile(x,0.25, na.rm=T)})
 ciR250 <- apply(rvector,2,function(x){quantile(x,0.75, na.rm=T)})
+
+# Proportion recordered in serology recovered
+medP_Radj <- apply(rvectorAdj,2,function(x){median(x, na.rm=T)}); 
+ciP1_Radj <- apply(rvectorAdj,2,function(x){quantile(x,0.025, na.rm=T)}); 
+ciP2_Radj <- apply(rvectorAdj,2,function(x){quantile(x,0.975, na.rm=T)}); 
 
 # Number of infected
 med_Inf <- apply(ivector,2,function(x){median(x, na.rm=T)})
@@ -234,7 +258,7 @@ polygon(c(plot_fig2A$dates, rev(plot_fig2A$dates)),
          c(denv.cases, rep(0, length(temp_denv_series)-length(denv.cases))), 
          col=col2, cex=0.8, pch=16, type='l',
          xaxt="n",yaxt="n",xlab="",ylab="",frame.plot=F)
-    lines(plot_fig2A$dates, plot_fig2A$denv.cases, col=col2, cex=0.8, lwd = 2)
+    #lines(plot_fig2A$dates, plot_fig2A$denv.cases, col=col2, cex=0.8, lwd = 2)
     axis(2, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
     mtext("Dengue-3 cases", side=2, line=2, col=col2) # Label for 2nd axis
       grid(NA,NULL, lty = 1, col = colgrid) 
@@ -253,6 +277,7 @@ i=1; lci=NULL;uci=NULL;lci_A=NULL;uci_A=NULL;points=NULL;points_A=NULL; date=NUL
 dataframe.sero <- data.frame(points,lci,uci, seroposdates)
 dataframe.p2 <- data.frame(date.vals=date.vals[1:tMax], y.vals.plot, 
                            medP_R, ciP1_R, ciP2_R,
+                           medP_Radj, ciP1_Radj, ciP2_Radj,
                            med_intro, ci_intro1, ci_intro2)
 
 plot(dataframe.p2$date.vals, dataframe.p2$ci_intro2, col=0, ylab="", yaxt="n", xlab="Date", bty="n", xaxt="n")
@@ -260,22 +285,26 @@ axis(side=2, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
 axis.Date(1, at=seq(min(plot_fig2A$dates), max(plot_fig2A$dates), by="3 months"), 
           labels=format(seq(min(plot_fig2A$dates), max(plot_fig2A$dates), by="3 months"),"%b-%y"), las=1)
 par(new=T)
-#lines(dataframe.p2$date.vals, dataframe.p2$med_intro, col=col7, lwd = 2)
+lines(dataframe.p2$date.vals, dataframe.p2$med_intro, col=col7, lwd = 2)
 polygon(c(dataframe.p2$date.vals, rev(dataframe.p2$date.vals)), 
         c(dataframe.p2$ci_intro1,rev(dataframe.p2$ci_intro2)), lty=0, col=col7a)
-for(i in 1:20){
-  lines(dataframe.p2$date.vals, introvector[i,], type = "l", col = col7a)
-}
+#for(i in 1:20){
+#  lines(dataframe.p2$date.vals, introvector[i,], type = "l", col = col7a)
+#}
 mtext("Introductions", side=2, line=2, col=col7)
 par(new=T)
 ylims <- c(0, max(dataframe.p2$ciP2_R)*1.1)
-plot(dataframe.p2$date.vals, dataframe.p2$medP_R, type='l', lty=2, col=col5a, ylim=ylims, lwd = 2,
+plot(dataframe.p2$date.vals, dataframe.p2$medP_Radj, type='l', lty=2, col=col6a, ylim=ylims, lwd = 2,
      xaxt='n', xlab="", yaxt="n", ylab="", bty="n")
 axis(side=4,  bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
 mtext("Prop. seropostive", side=4, line=2, col=col5)
 polygon(c(dataframe.p2$date.vals, rev(dataframe.p2$date.vals)), 
+        c(dataframe.p2$ciP1_Radj, rev(dataframe.p2$ciP2_Radj)),
+        col=col5a, border = col5, lty=0)
+lines(dataframe.p2$date.vals, dataframe.p2$medP_R, lty = 1, lwd = 2, col = col3a)
+polygon(c(dataframe.p2$date.vals, rev(dataframe.p2$date.vals)), 
         c(dataframe.p2$ciP1_R, rev(dataframe.p2$ciP2_R)),
-        col=col5a,lty=0)
+        col=col3a, border = col3, lty=0)
 points(dataframe.sero$seroposdates, dataframe.sero$points, col=col5, cex=2, pch=16)
 lines(c(dataframe.sero$seroposdates[1],dataframe.sero$seroposdates[1]),
       c(dataframe.sero$lci[1],dataframe.sero$uci[1]), col=col5, lwd = 2)
@@ -307,19 +336,19 @@ lines(data.frame2c$date.vals, data.frame2c$medS, col=col4, lwd = 2)
 polygon(c(data.frame2c$date.vals, rev(data.frame2c$date.vals)), 
         c(data.frame2c$ciS1,rev(data.frame2c$ciS2)), lty=0, col=col4a)
 axis(side=2, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
-mtext("Number susceptible", side=2, line=2, col=col4, adj = 1 )
+mtext("Number susceptible", side=2, line=2, col=col4, adj = 0.8 )
 par(new = T)
 plot(data.frame2c$date.vals, data.frame2c$med_Inf,
      col=0, lwd = 2, type = "l", bty = "n", xaxt = "n", yaxt = "n", ylab = "", xlab = "", ylim = c(0, max(data.frame2c$ci_inf2)))
 lines(data.frame2c$date.vals, data.frame2c$med_Inf, col=col1, lwd = 2)
 polygon(c(data.frame2c$date.vals, rev(data.frame2c$date.vals)), 
         c(data.frame2c$ci_inf1,rev(data.frame2c$ci_inf2)), lty=0, col=col1a)
-  aty <- axTicks(2)
+  aty <- log(c(1,10,100,1000,10000))
   labels <- sapply(aty,function(i)
     as.expression(round(exp(i)))
   )
 axis(side=4, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1, at=aty,labels=labels, las = 2)
-mtext("Number infected", side=4, line=2, col=col1, adj = 0)
+mtext("Number infected", side=4, line=2, col=col1, adj = 0.2)
 abline(h = 0, lty = 2, col = "gray70")
 grid(NA,NULL, lty = 1, col = colgrid) 
 mtext("C",side=3, adj=0, font=2)
@@ -397,7 +426,7 @@ grid(NA,NULL, lty = 1, col = colgrid)
 mtext("D",side=3, adj=0, font=2)
 
 # Fig 2 - save ------------------------------------------------------------
-dev.copy(pdf, paste0("output/fig2_modelOutputs", run.name,".pdf"), 7, 4)
+dev.copy(pdf, paste0("output/fig2_modelOutputs", run.name,".pdf"), 12, 6)
   dev.off()
 
 # Figure 3 - introduction dynamics ----------------------------------------
@@ -565,6 +594,7 @@ rec0 <-  is.it.missing(thetatab$rec0)
 omega <-  is.it.missing(thetatab$omega_d)
 chi <-  is.it.missing(thetatab$chi)
 epsilon <-  is.it.missing(thetatab$epsilon)
+alpha <-  is.it.missing(thetatab$alpha)
 rho <-  is.it.missing(thetatab$rho)
 beta_base <-  is.it.missing(thetatab$beta_base)
 beta_grad <-  is.it.missing(thetatab$beta_grad)
@@ -599,6 +629,7 @@ param1 <- cbind(
   c.text(omega[picks],2),
   c.text(chi[picks],2),
   c.text(epsilon[picks],2),
+  c.text(alpha[picks],2),
   c.text(rho[picks],2),
   c.text(beta_base[picks],2),
   c.text(beta_grad[picks],2),
@@ -620,7 +651,8 @@ colnames(param1)=c(
   "Reporting rate","Reporting dispersion",
   "Seasonal amplitude","Seasonal midpoint",
   "Cross immunity period","Cross protection",
-  "Test specificity", 
+  "False positives", 
+  "False negatives", 
   "Waning Zika immunity",
   "base","grad",'mid',
   "Zika introduction date (mid)", "Number introduced", "Width introduced","Peak introduced",
