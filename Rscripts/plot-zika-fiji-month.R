@@ -181,13 +181,21 @@ for(ii in 1:btsp){
 ## plot posterior of cases
 tMaxDenv <- length(load_DENVfit_1$c_trace_tab[1,])
 denvvector <- matrix(NA,nrow=btsp,ncol=tMaxDenv)
+fakeZikvVector <- matrix(NA,nrow=btsp,ncol=tMax)
 for(ii in 1:btsp){
   pick <- sample(load_DENVfit_1$picks, 1)
-  denvvector[ii,] <- ReportC(load_DENVfit_1$c_trace_tab[pick,1:tMaxDenv],load_DENVfit_1$thetatab[pick,'rep'],load_DENVfit_1$thetatab[pick,'repvol'])
+  denvvector[ii,] <- ReportC(load_DENVfit_1$c_trace_tab[pick,1:tMaxDenv],
+                             load_DENVfit_1$thetatab[pick,'rep'],load_DENVfit_1$thetatab[pick,'repvol'])
+  fakeZikvVector[ii,] <- ReportC(load_posterior_1$c_trace_tab[pick,1:tMax], ## use ZIKV cases
+                                 load_DENVfit_1$thetatab[pick,'rep'],       ## but DENV reporting
+                                 load_DENVfit_1$thetatab[pick,'repvol'])
 }
 medD <- apply(denvvector,2,function(x){median(x, na.rm=T)})
 ciD1 <- apply(denvvector,2,function(x){quantile(x,0.025, na.rm=T)})
 ciD2 <- apply(denvvector,2,function(x){quantile(x,0.975, na.rm=T)})
+medZfake <- apply(fakeZikvVector,2,function(x){median(x, na.rm=T)})
+ciZ1fake <- apply(fakeZikvVector,2,function(x){quantile(x,0.025, na.rm=T)})
+ciZ2fake <- apply(fakeZikvVector,2,function(x){quantile(x,0.975, na.rm=T)})
 
 # Estimated number of cases 
 medP <- apply(cvector,2,function(x){median(x, na.rm=T)})
@@ -446,6 +454,56 @@ mtext("D",side=3, adj=0, font=2)
 dev.copy(pdf, paste0("output/fig2_modelOutputs", run.name,".pdf"), 12, 6)
   dev.off()
 
+# Fig 2 SI - ZIKV with DENV reporting  ------------------------------------
+date.vals.wk <- c(1:length(medD)*7)+startdate
+dfFakeZikaPlot <- tibble("date.vals"=date.vals.wk, medD, ciD1, ciD2) %>%
+  mutate(mm = lubridate::month(date.vals), 
+         yyyy = lubridate::year(date.vals)) %>%
+  group_by(yyyy, mm) %>% 
+  summarise(medD = sum(medD), ciD1 = sum(ciD1), ciD2 = sum(ciD2), .groups = "drop") 
+dfFakeZikaPlot$time_vals <- row(dfFakeZikaPlot)[,1]*dt
+dfFakeZikaPlot$date_vals <- dfFakeZikaPlot$time_vals + startdate
+
+ylims <- c(0, max(ciZ2fake)*1.1)
+plot(date.vals, medZfake, col=col1, cex=0.8, pch=16, bty='n',
+     ylim=ylims, type = "l", lwd=2,
+     xlab="Date", ylab="", yaxt='n',
+     xaxt="n")
+  axis.Date(1, at=seq(min(date.vals), max(date.vals), by="years"), 
+          labels=format(seq(min(date.vals), max(date.vals), by="years"),"%Y"), las=1)
+  polygon(c(date.vals, rev(date.vals)),
+        c(ciZ1fake, rev(ciZ2fake)), col=col1a, lty=0)
+  axis(4, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
+  mtext("Hypothetical ZIKV cases", side=4, line=2, col=col1, cex=1)
+  grid(NA,NULL, lty = 1, col = colgrid) 
+  date.vals.wk <- c(1:length(medD)*7)+startdate
+  lines(dfFakeZikaPlot$date_vals, dfFakeZikaPlot$medD, col = col2)
+  polygon(c(dfFakeZikaPlot$date_vals, rev(dfFakeZikaPlot$date_vals)),
+          c(dfFakeZikaPlot$ciD1, rev(dfFakeZikaPlot$ciD2)), col=col2a, lty=0)
+  axis(side=2,  bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
+  mtext("Estimated DENV-3 cases", side=2, line=2, col=col2) # Label for 2nd axis
+  grid(NA,NULL, lty = 1, col = colgrid) 
+dev.copy(pdf, paste0("output/siFig_sameReporting", run.name,".pdf"), 12, 6)
+  dev.off()
+  
+
+# fig SI: stochastic probability ------------------------------------------
+#( large outbreak given R and initial infections A) = 1–(1/R)^A
+# probTakeOff <- matrix(NA, length(btstrap), ncol = length(dataframe.p3$medRR))
+# for(ii in btstrap){
+#   pickInit <- thetatab[ii,"intro_base"]
+#   init_infectious <- 4*pickInit*thetatab[ii,"intro_width"]
+#   probTakeOff[ii,] <- 1-(1/dataframe.p3$medRR)^init_infectious
+# }
+#   plot(dataframe.p3$medRR, probTakeOff[1,], ylim = c(0,1), type='l')
+#   medTakeoff <- apply(probTakeOff,2,function(x){median(x, na.rm=T)}); 
+#   ci1_takeoff <- apply(probTakeOff,2,function(x){quantile(x,0.025, na.rm=T)}); 
+#   ci2_takeoff <- apply(probTakeOff,2,function(x){quantile(x,0.975, na.rm=T)}); 
+# plot(dataframe.p3$date.vals, medTakeoff, type = "l", ylim = c(0,1), col = col5)  
+#   polygon(c(dataframe.p3$date.vals, rev(dataframe.p3$date.vals)),
+#           c(ci1_takeoff, rev(ci2_takeoff)), col=col5a, lty=0)
+  ##????
+    
 # Figure 3 - introduction dynamics ----------------------------------------
 if(output_simulations==T){
   thetaMax <- thetatab[sim_liktab==max(sim_liktab),] %>% summarise_all(~median(.)) %>% as.numeric()
@@ -465,15 +523,16 @@ if(output_simulations==T){
   zikv_simulation <- function(change_startdate, denv_version = FALSE){
     ## loop through simulation
     if(denv_version == TRUE){
-      #thetaInitMax[["r_init"]] <- 0.331*342000
-      #thetaInitMax[["s_init"]] <- 342000-thetaInitMax[["r_init"]]
       theta_use <- DENVthetaMax
+      thetaInitMax[["r_init"]] <- theta_use[["rec0"]]*theta_use[["npop"]]
+      thetaInitMax[["s_init"]] <- theta_use[["npop"]]-thetaInitMax[["r_init"]]
       theta_use[["alpha"]] <- 1
       theta_use[["Inf"]] <- theta_use[["Inf."]]
+      theta_use[["intro_mid"]] <- 271
     }else{
       theta_use <- thetaMax
+      theta_use[["intro_mid"]] <- change_startdate
     }
-    theta_use[["intro_mid"]] <- change_startdate
     theta_use[["chi"]] <- 0
     theta_use[["beta_base"]] <- 0
     sim <- Deterministic_modelR_final_DENVimmmunity_monthly(
@@ -487,65 +546,53 @@ if(output_simulations==T){
                 zika_rec = sim$R_trace))
   }
 
-time.vals <- time.vals.week  
+time.vals <- seq(0,max(data$time.vals),7)  
 dt <- 7
   intros <- seq(365*1.5,365*2.3,90)
   zika_model_sims <- sapply(intros, function(xx){
     zikv_simulation(xx)$zika_trace
     })
-  dengue_model_sims <- sapply(intros, function(xx){
-    zikv_simulation(xx, denv_version = TRUE)$zika_trace
-    })
+  dengue_model_sims <- zikv_simulation(1, denv_version = TRUE)$zika_trace
+  
   zika_sims <- as.data.frame(zika_model_sims)
-  dengue_sims <- as.data.frame(dengue_model_sims)
-  names(zika_sims) <- names(dengue_sims) <- startdate + intros
-  zika_sims$time_vals <- dengue_sims$time_vals <- row(infections_series)[,1]*dt
-  zika_sims$date_vals <- dengue_sims$date_vals <- zika_sims$time_vals + startdate
-  #zika_sims$denv_vals <- dengue_sims$denv_vals <- zikv_simulation(1)$denv_trace
+  names(zika_sims) <- startdate + intros
+  zika_sims$time_vals <- row(zika_sims)[,1]*dt
+  zika_sims$date_vals <- zika_sims$time_vals + startdate
+  zika_sims$denv_vals <- dengue_model_sims
   
   zika_sims_short <- zika_sims %>%
-    filter(date_vals >= as.Date("2014-05-01") & date_vals <= as.Date("2017-01-01")) #%>%
-    #mutate_at(vars(-c("time_vals", "date_vals")), ~ifelse(. <= 0, -1, log(.)))
-  dengue_sims_short <- dengue_sims %>%
-    filter(date_vals >= as.Date("2014-05-01") & date_vals <= as.Date("2017-01-01")) #%>%
-    #mutate_at(vars(-c("time_vals", "date_vals")), ~ifelse(. <= 0, -1, log(.)))
-    
+    filter(date_vals >= as.Date("2013-05-01") & date_vals <= as.Date("2017-01-01")) #%>%
+  
   seasonal_wave <- sapply(zika_sims_short$time_vals, function(xx){seasonal_f(xx, amp = thetaMax[["beta_v_amp"]], mid=thetaMax[["beta_v_mid"]])})
   
-  sims <- dim(zika_sims_short)[2]-2
-  pdf(here::here("output/fig3_simulations2.pdf"), width = 6, height = 6)
-  par(mfcol=c(sims, 1), mar=c(2,4,1,6.5)+0.1)
+  sims <- dim(zika_sims_short)[2]-3
+  pdf(here::here("output/fig3_simulations.pdf"), width = 6, height = 6)
+  par(mfcol=c(sims, 1), mar=c(2,4,1,5.5)+0.1)
   ylimmaxZ <- zika_sims_short %>% pivot_longer(cols=starts_with("2")) %>% summarise(max(value)) %>% pull()
-  ylimmaxD <- dengue_sims_short %>% pivot_longer(cols=starts_with("2")) %>% summarise(max(value)) %>% pull()
-  ylimmax <- max(ylimmaxZ, ylimmaxD)
+  #ylimmaxD <- dengue_sims_short %>% pivot_longer(cols=starts_with("2")) %>% summarise(max(value)) %>% pull()
+  ylimmax <- max(ylimmaxZ, max(zika_sims_short$denv_vals))
   ylimits <- c(0, round(ylimmax*1.1,0))
   for(ii in 1:sims){
-    plot_date_series <- zika_sims_short$date_vals
-    ##
+  plot_date_series <- zika_sims_short$date_vals
     #plot(zika_sims_short$date_vals, seasonal_wave, col="gray85", yaxt="n", ylab="", xaxt="n", xlab="", type='l', ylim=c(0,2), bty="n", lwd = 1.25)
     #par(new=T)
     plot(zika_sims_short$date_vals, zika_sims_short[,ii], type="l", col=col1, ylab="", xlab="Date", ylim=ylimits, axes = F, bty="n", lwd = 2)
-    mtext("Zika infections", side = 4, line=2, col = col1, padj = 1.5)
-    mtext("Dengue infections", side = 4, line=2, col = col7, padj = 2.8)
-    text(as.Date("2016-01-01"),ylimmax*(7/8), paste("Attack Rate","=",signif(sum(zika_sims_short[,ii])/thetaMax[["npop"]],2)), col = col1)
-    text(as.Date("2016-01-01"),ylimmax*(6/8), paste("Attack Rate","=",signif(sum(dengue_sims_short[,ii])/thetaMax[["npop"]],2)), col = col7)
-    #lines(zika_sims_short$date_vals, zika_sims_short$denv_vals, lwd = 2 , col = col7)
-    lines(dengue_sims_short$date_vals, dengue_sims_short[,ii], type="l", col=col7, ylab="", xlab="Date", ylim=ylimits, xaxt="n", bty="n", lwd = 2)
+    lines(zika_sims_short$date_vals, zika_sims_short[,"denv_vals"], type="l", col=col7, ylab="", xlab="Date", ylim=ylimits, xaxt="n", bty="n", lwd = 2)
+    #lines(dengue_sims_short$date_vals, dengue_sims_short[,ii], type="l", col=col7, ylab="", xlab="Date", ylim=ylimits, xaxt="n", bty="n", lwd = 2)
     axis(side = 4)
-    # aty <- log(c(1,10,100,1000,1e4,1e5))
-    # labels <- sapply(aty,function(i)
-    #   as.expression(round(exp(i)))
-    # )
-    #axis(side=4, bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1, at=aty,labels=labels, las = 2)
-    par(new=T)
+      mtext("Zika infections", side = 4, line=2, col = col1, padj = 0.5)
+      mtext("Dengue infections", side = 4, line=2, col = col7, padj = 1.8)
+      text(as.Date("2016-01-01"),ylimmax*(7/8), paste("Attack Rate","=",signif(sum(zika_sims_short[,ii])*100/thetaMax[["npop"]],2),"%"), col = col1)
+      #text(as.Date("2016-01-01"),ylimmax*(6/8), paste("Attack Rate","=",signif(sum(dengue_sims_short[,ii])/thetaMax[["npop"]],2)), col = col7)
+  par(new=T)
     intros_series <- sapply(zika_sims_short$time_vals, function(xx){intro_f(xx, mid = intros[ii], width = thetaMax[["intro_width"]], base = thetaMax[["intro_base"]])})
     plot(zika_sims_short$date_vals, intros_series, type="l", yaxt="n", ylab="", ylim = c(0, ceiling(thetaMax[["intro_base"]]/4)), xaxt="n", xlab="", col = col2, lty=1, bty="n", lwd = 1.25)
     axis.Date(side=1, at=seq.Date(min(plot_date_series), max(plot_date_series)+180, by = "6 months"), "months", format = "%b %Y")
-    mtext("Introductions", side = 2, line=2, col = col2)
     axis(side = 2)
-    text(labels = as.character(intros[ii]+startdate), x = intros[ii]+startdate, y = max(intros_series)*1.1, col = col2, pos = 3)
-    mtext(LETTERS[ii], side=3, adj=0, font=2)
-    grid(NA,NULL, lty = 1, col = colgrid) 
+      mtext("Introductions", side = 2, line=2, col = col2)
+      text(labels = as.character(intros[ii]+startdate), x = intros[ii]+startdate, y = max(intros_series)*1.1, col = col2, pos = 4)
+  mtext(LETTERS[ii], side=3, adj=0, font=2)
+  grid(NA,NULL, lty = 1, col = colgrid) 
   }
   dev.off()
 }

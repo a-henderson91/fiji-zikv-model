@@ -14,13 +14,25 @@ zika_single_sim <- function(transmission_rate){
   theta <- c(thetatab[1,],thetaAlltab[1,iiH,], theta_denv)
   theta_init <- theta_initAlltab[1,iiH,]
   
+  theta[["beta_h"]] <- transmission_rate
+  
+  # check that R is > 1 before introducing 
+  theta_test <- as.data.frame(t(theta))
+  theta_test$Inf. <- theta_test[["Inf"]]
+  seasonal_min <- theta_test[["intro_mid"]]-theta_test[["intro_width"]]
+  seasonal_max <- theta_test[["intro_mid"]]+theta_test[["intro_width"]]
+  
+  b_vary <- seasonal_f(seasonal_min:seasonal_max, 
+                       0, amp=theta_test[['beta_v_amp']], mid=theta_test[['beta_v_mid']])
+  R_at_intro <- calculate_r0(th_in = theta_test, sus = 1, b_vary = b_vary)$rr_out
+  if(mean(R_at_intro)<1){theta[["intro_base"]] <- 0}
+  
   introductions_mid <- theta[["intro_mid"]]
   introductions_width <- theta[["intro_width"]]
   introductions_base <- theta[["intro_base"]]
   ## total introductions
   total_intro <- 4 * introductions_width * introductions_base # Integral of 4*base*exp(-(time-mid)/width)/(1+exp(-(time-mid)/width))^2 over -infty/infty is 4*base*width
   
-  theta[["beta_h"]] <- transmission_rate
   # set initial conditions
   init1 <- c(
     s_init=theta_init[["s_init"]],e_init=theta_init[["i1_init"]],i_init=theta_init[["i1_init"]],r_init=theta_init[["r_init"]],c_init=0,

@@ -4,9 +4,9 @@
 # github.com/a-henderson91/fiji-zikv-model
 # - - - - - - - - - - - - - - - - - - - - - - - 
 
-virus <- "DEN3"  # DEN3 or ZIKV
+virus <- "ZIKV"  # DEN3 or ZIKV
 
-output_simulations <- 
+output_simulations <- F
 output_diagnostics <- T
 ll <- 1
 
@@ -405,7 +405,7 @@ grid(NA,NULL, lty = 1, col = colgrid)
 mtext("D",side=3, adj=0, font=2)
 
 # Fig 2 - save ------------------------------------------------------------
-dev.copy(pdf, paste0("output/fig2_modelOutputs", run.name,".pdf"), 7, 4)
+dev.copy(pdf, paste0("output/fig2_modelOutputs", run.name,".pdf"),  12, 6)
   dev.off()
 
 # Figure 3 - introduction dynamics ----------------------------------------

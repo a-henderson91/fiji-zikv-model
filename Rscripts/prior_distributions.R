@@ -31,7 +31,7 @@ priorBeta <- function(x){dunif(x, min = 0, max = 1)}
 
 
 priorIntro <- function(x){dnorm(x, mean=intro_prior_mu, sd=intro_prior_sigma)} ## from 'Export start time Central Division.R'
-priorInitInf <- function(x){dunif(x, min = 1, max = 20)} ## peaks at >=1, no more than 1000 (total into = 4x10xInitInf)
+priorInitInf <- function(x){dunif(x, min = 1, max = 25)} ## peaks at >=1, no more than 1000 (total into = 4x10xInitInf)
 #priorInitWidth <- function(x){dunif(x, min=0, max=50)} ## removed estimate of width
 
 priorEpsilon <- function(x){dtruncnorm(x, a=0, b=1, mean=0.07, sd=0.15)}

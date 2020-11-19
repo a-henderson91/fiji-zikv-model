@@ -117,9 +117,10 @@ dev.copy(pdf, here::here("output/fig_supp_controlFn.pdf"), 6,4)
 # run a single simulation with initial values -----------------------------
 source(here::here("Rscripts/zika-single-simulation.R"))
 initial_beta_h <- thetaAlltab[1,iiH,][["beta_h"]]
+thetaAlltab[1,iiH,][["intro_mid"]] <- 650
 run1singlesim <- zika_single_sim(initial_beta_h)
 if(is.nan(run1singlesim) | run1singlesim==-Inf){
-  t_rate <- seq(0.2, 0.3, 0.02)
+  t_rate <- seq(0.2, 0.5, 0.02)
     lik_search <- sapply(t_rate, function(xx){zika_single_sim(xx)})
     max_beta_h <- t_rate[which(lik_search==max(lik_search, na.rm = T))]
     thetaAlltab[1,iiH,"beta_h"] <- max_beta_h[1]

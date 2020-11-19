@@ -13,7 +13,18 @@
 Deterministic_modelR_final_DENVimmmunity_monthly <- function(theta, theta_init, locationI = "Zika2016", seroposdates, episeason, include.count=T){
     theta[["denv_start_point"]] <- as.Date("2013-10-27") - startdate 
     theta[["zika_start_point"]] <- theta[["intro_mid"]] ## these are poorly named. "zika_start_point" just refers to the main disease of interest. And 'denv_start_point' is the fixed background DENV3
-
+    
+    # check that R is > 1 before introducing 
+    theta_test <- as.data.frame(t(theta))
+    theta_test$Inf. <- theta_test[["Inf"]]
+      seasonal_min <- theta_test[["zika_start_point"]]-theta_test[["intro_width"]]
+      seasonal_max <- theta_test[["zika_start_point"]]+theta_test[["intro_width"]]
+      
+    b_vary <- seasonal_f(seasonal_min:seasonal_max, 
+                         0, amp=theta_test[['beta_v_amp']], mid=theta_test[['beta_v_mid']])
+    R_at_intro <- calculate_r0(th_in = theta_test, sus = 1, b_vary = b_vary)$rr_out
+    if(mean(R_at_intro)<1){theta[["intro_base"]] <- 0}
+    
     # These values tell how to match states of compartment with data points
     sim.vals <- seq(0,max(time.vals)-min(time.vals), dt) + dt
     time.vals.sim <- seq(0,max(sim.vals),dt)
