@@ -25,7 +25,7 @@ if(virus=="ZIKV"){
 }
 source(here::here("Rscripts", preamblecode))
 
-mcmc.burn <- 0.5
+mcmc.burn <- 0.4
 
 # load vectorbornefit code ------------------------------------------------
 all_files <- list.files(here::here("Rfunctions"))
@@ -107,15 +107,15 @@ plot_function <- function(var_name, plot_abline = F){
   }
 }
 
-png(here("output/traceplot.png"), 
-     width = 4, height = 6, units = "in",
-     res = 150)
-  par(mfrow=c(ceiling(nn_to_plot/2),2), mar = c(4, 4, 0.5, 0.2))
-  sapply(vars_to_plot, function(xx){plot_function(xx, plot_abline = T)})
-dev.off()
+# png(here("output/traceplot.png"), 
+#      width = 4, height = 6, units = "in",
+#      res = 150)
+#   par(mfrow=c(ceiling(nn_to_plot/2),2), mar = c(4, 4, 0.5, 0.2))
+#   sapply(vars_to_plot, function(xx){plot_function(xx, plot_abline = T)})
+# dev.off()
 
 # Define burnin -----------------------------------------------------------
-mcmc.burn <- 0.5
+mcmc.burn <- 0.4
 
 # Re-import posteriors with burnin ----------------------------------------
 theta_list <- list()
@@ -126,22 +126,22 @@ for(iiM in 1:m.tot){
 }
 head(theta_list)
 
-labs_to_plot <- c("beta (humans)", "beta (mosquitoes)", "rep. prop.", "control", "cross-protect",
-                  "assay spec.", "AB duration", "intro (mid)", "intro (height)", "intro (width)")
+labs_to_plot <- c("Transmisssion rate", "Rep. prop.","Cross-protection prop.",
+                  "False Pos.", "Sensitivity",  "intro (mid)", "intro (height)")
 names(labs_to_plot) <- vars_to_plot
 
-png(here("output/traceplot_burnin.png"), 
+png(here("output", paste0("traceplot_burnin_", run.name, ".png")), 
      width = 4, height = 6, units = "in",
      res = 150)
-par(mfrow=c(ceiling(nn_to_plot/2),2), mar = c(4, 4, 0.5, 0.2))
-sapply(vars_to_plot, function(xx){plot_function(xx)})
+  par(mfrow=c(ceiling(nn_to_plot/2),2), mar = c(4, 4, 0.5, 0.2))
+  sapply(vars_to_plot, function(xx){plot_function(xx)})
 dev.off()
 
 # histograms of output ----------------------------------------------------
 ## combine the chains
 theta_joint <- rbind(theta_list$theta_1, theta_list$theta_2)
 
-pdf(here::here("output", "mcmc_density_plots.pdf"), height = 6, width = 6)
+pdf(here("output", paste0("mcmc_density_plots_", run.name, ".pdf")), height = 6, width = 6)
 par(mfrow=c(ceiling(nn_to_plot/2),2), mar = c(4, 4, 2, 4))
 ## beta, beta_v, beta_base, rep, chi, epsilon, rho, intro_mid, intro_base, intro_width
 hist(theta_joint$beta_h, main = "", xlab = "") 
@@ -149,24 +149,10 @@ par(new=T)
 curve(priorBeta, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "")
 axis(side = 4)
 mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-mtext("beta (humans)", side=3, adj=0, font=2)
-
-hist(theta_joint$beta_v, main = "", xlab = "") 
-par(new=T)
-curve(priorBetaV(x), col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "")
-axis(side = 4)
-mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-mtext("beta (vector)", side=3, adj=0, font=2)
+mtext("transmission rate", side=3, adj=0, font=2)
 
 hist(theta_joint$rep, main = "", xlab = "") 
-mtext("rep. rate", side=3, adj=0, font=2)
-
-hist(theta_joint$beta_base, main = "") 
-par(new=T)
-curve(prior_vectorcontrol(x), col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "")
-axis(side = 4)
-mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-mtext("control", side=3, adj=0, font=2)
+mtext("rep. prop.", side=3, adj=0, font=2)
 
 hist(theta_joint$chi, main = "", xlab = "") 
 par(new=T)
@@ -175,15 +161,19 @@ axis(side = 4)
 mtext(side = 4, "Prior", cex = 0.7, padj = 3)
 mtext("cross-protect", side=3, adj=0, font=2)
 
-hist(theta_joint$epsilon, main = "", xlab = "") 
+hist(theta_joint$epsilon, main = "", xlab = "", xlim = c(0,0.2)) 
 par(new=T)
-curve(priorepsilon, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "")
+curve(priorEpsilon, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", xlim = c(0,0.2))
 axis(side = 4)
 mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-mtext("assay spec.", side=3, adj=0, font=2)
+mtext("false positivity", side=3, adj=0, font=2)
 
-hist(theta_joint$rho, main = "", xlab = "") 
-mtext("AB duration", side=3, adj=0, font=2)
+hist(theta_joint$alpha, main = "", xlab = "", xlim = c(0,1)) 
+par(new=T)
+curve(priorAlpha, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "")
+axis(side = 4)
+mtext(side = 4, "Prior", cex = 0.7, padj = 3)
+mtext("sensitivity", side=3, adj=0, font=2)
 
 hist(theta_joint$intro_mid, main = "", xlim = c(0,1500), xlab = "")
 par(new=T)
@@ -199,20 +189,13 @@ axis(side = 4)
 mtext(side = 4, "Prior", cex = 0.7, padj = 3)
 mtext("intro height", side=3, adj=0, font=2)
 
-hist(theta_joint$intro_width, main = "", xlim = c(0,60), xlab = "") 
-par(new=T)
-curve(priorInitWidth, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", from = 0, to = 60)
-axis(side = 4)
-mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-mtext("intro width", side=3, adj=0, font=2)
-
 dev.off()
 
 # correlation plots -------------------------------------------------------
-sample.p <- sample(length(theta_joint$beta_h),1000,replace=T)
+sample.p <- sample(length(theta_joint$beta_h),100,replace=T)
 thinner.theta <- theta_joint[sample.p,]
 
-png(here("output/corrplot.png"), 
+png(here("output", paste0("corrplot_", run.name, ".png")), 
      width = 12, height = 12, units = "in",
      res = 200)
 par(mfrow = c(length(vars_to_plot), length(vars_to_plot)),  mar = c(3, 4, 2, 1) )
@@ -233,21 +216,6 @@ for(ii in 1:length(vars_to_plot)){
 }
 dev.off()
 
-## just plot Betas against each other 
-par(mfrow = c(2,2),  mar = c(3, 4, 2, 1))
-## beta_h hist
-hist(theta_joint[[vars_to_plot[1]]],xlab=labs_to_plot[1],main=NULL)
-mtext(labs_to_plot[1], adj = 0, font = 1, cex = 0.9)
-## blank
-plot(thinner.theta[[vars_to_plot[1]]],thinner.theta[[vars_to_plot[1]]],pch=19,cex=0.2, xlab="", ylab="",col="white",xaxt="n",yaxt="n",axes=F)
-## betas correlation plot
-plot(thinner.theta[[vars_to_plot[1]]],thinner.theta[[vars_to_plot[2]]],pch=19,cex=0.3, xlab=labs_to_plot[1], ylab=labs_to_plot[2])
-points(median(thinner.theta[[vars_to_plot[1]]]),median(thinner.theta[[vars_to_plot[2]]]),col="orange",cex=1.5,lwd=2)
-## beta_v hist
-hist(theta_joint[[vars_to_plot[2]]],xlab=labs_to_plot[2],main=NULL)
-mtext(labs_to_plot[2], adj = 0.5, font = 1, cex = 0.9)
-dev.copy(pdf, here::here("outputs", "betas_corr.pdf"), 6, 4)
-  dev.off()
 # Diagnostics table -------------------------------------------------------
 ess_theta <- apply(theta_joint, 2, function(xx){effectiveSize(xx)})
 write.csv(signif(ess_theta,3), here::here("output", "ess_theta.csv"))
