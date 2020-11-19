@@ -32,7 +32,7 @@ run.name <- "1118_model1"
 dt <- 7
 
 ## MCMC parameters 
-MCMC.runs <- 1000 #number of MCMC iterations 
+MCMC.runs <- 20000 #number of MCMC iterations 
 thinning.parameter <- 1
 multichain <- c(1:3)  # n chains to run in parallel
 mcmc.burn <- 0.4
