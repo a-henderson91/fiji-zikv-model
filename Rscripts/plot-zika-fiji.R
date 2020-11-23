@@ -7,7 +7,7 @@
 virus <- "DEN3"  # DEN3 or ZIKV
 
 output_simulations <- F
-output_diagnostics <- T
+output_diagnostics <- F
 ll <- 1
 
 here::here()
