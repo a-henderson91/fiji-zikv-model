@@ -97,9 +97,6 @@ denv3_single_sim <- function(transmission_rate){
   
   # Compute likelihood ------------------------------------------------------
   # Calculate seropositivity at pre-specified dates and corresponding likelihood
-  epsilon <- theta[["epsilon"]]
-  alpha <- theta[["alpha"]]
-
   i=1; seroP=NULL; binom.lik=NULL
   if(include.sero.likelihood==T){
     for(date in seroposdates){

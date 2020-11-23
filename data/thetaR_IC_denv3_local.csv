@@ -13,8 +13,8 @@ beta_base,0.58,NA
 beta_grad,0.2,NA
 beta_mid,470,NA
 beta_width,20,NA
-epsilon,0,NA
-alpha,1,NA
+epsilon,0.01,NA
+alpha,0.99,NA
 rho,NA,NA
 chi,NA,NA
 omega_d,NA,NA

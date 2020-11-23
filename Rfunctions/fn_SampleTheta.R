@@ -22,6 +22,9 @@ SampleTheta<-function(theta_in, theta_init_in, covartheta, covartheta_init, glob
       if(sum(names(theta_star)=="epsilon")>0){ # check theta contains this vector
         theta_star[["epsilon"]]=min(theta_star[["epsilon"]],2-theta_star[["epsilon"]]) # Ensure reporting between zero and 1
       }
+      if(sum(names(theta_star)=="alpha")>0){ # check theta contains this vector
+        theta_star[["alpha"]]=min(theta_star[["alpha"]],2-theta_star[["alpha"]]) # Ensure reporting between zero and 1
+      }
       if(sum(names(theta_star)=="inf0")>0){ # check theta contains this vector
         theta_star[["inf0"]]=max(0,min(theta_star[["inf0"]],1000)) # Ensure initial infectious < total pop
       }
