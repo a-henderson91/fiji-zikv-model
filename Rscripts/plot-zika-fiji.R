@@ -573,6 +573,7 @@ rec0 <-  is.it.missing(thetatab$rec0)
 omega <-  is.it.missing(thetatab$omega_d)
 chi <-  is.it.missing(thetatab$chi)
 epsilon <-  is.it.missing(thetatab$epsilon)
+alpha <-  is.it.missing(thetatab$alpha)
 rho <-  is.it.missing(thetatab$rho)
 beta_base <-  is.it.missing(thetatab$beta_base)
 beta_grad <-  is.it.missing(thetatab$beta_grad)
@@ -599,6 +600,7 @@ param1 <- cbind(
   c.text(beta_h1[picks],2),
   c.text(1/alpha_h[picks],2),
   c.text(1/gamma[picks],2),
+  c.text(rec0[picks],2),
   c.text(rep[picks],2),
   c.text(repvol[picks],2),
   c.text(amp[picks],2),
@@ -606,6 +608,7 @@ param1 <- cbind(
   c.text(omega[picks],2),
   c.text(chi[picks],2),
   c.text(epsilon[picks],2),
+  c.text(alpha[picks],2),
   c.text(rho[picks],2),
   c.text(beta_base[picks],2),
   c.text(beta_grad[picks],2),
@@ -624,10 +627,12 @@ colnames(param1)=c(
   "beta_h",
   "Intrinsic incubation period",
   "Infectious period",
+  "Initial immune", 
   "Reporting rate","Reporting dispersion",
   "Seasonal amplitude","Seasonal midpoint",
   "Cross immunity period","Cross protection",
-  "Test specificity", 
+  "False positives", 
+  "False negatives", 
   "Waning Zika immunity",
   "base","grad",'mid',
   "Zika introduction date (mid)", "Number introduced", "Width introduced","Peak introduced",
