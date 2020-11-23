@@ -4,7 +4,7 @@
 # github.com/a-henderson91/fiji-zikv-model
 # - - - - - - - - - - - - - - - - - - - - - - - 
 
-virus <- "ZIKV"  # DEN3 or ZIKV
+virus <- "DEN3"  # DEN3 or ZIKV
 
 output_simulations <- F
 output_diagnostics <- T

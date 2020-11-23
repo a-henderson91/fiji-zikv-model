@@ -28,7 +28,7 @@ seasonal.transmission   <- T # whether to estimate seasonal transmission or not.
 include.sero.likelihood <- T
 vector.control          <- T # 
 include.2014.control    <- T # if False then beta_base set to 0
-run.name <- "1118_model1" 
+run.name <- "1123_model1" 
 dt <- 7
 
 ## MCMC parameters 

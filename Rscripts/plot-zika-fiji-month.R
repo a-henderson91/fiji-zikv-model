@@ -6,8 +6,8 @@
 
 virus <- "ZIKV"  # DEN3 or ZIKV
 
-output_simulations <- T
-output_diagnostics <- T
+output_simulations <- F
+output_diagnostics <- F
 ll <- 1
 
 here::here()
@@ -306,7 +306,7 @@ polygon(c(dataframe.intro$date.vals, rev(dataframe.intro$date.vals)),
 #}
 mtext("Introductions", side=2, line=2, col=col7)
 par(new=T)
-ylims <- c(0, max(dataframe.p2$ciP2_R)*1.1)
+ylims <- c(0, max(dataframe.p2$ciP2_R,dataframe.sero$uci)*1.1)
 plot(dataframe.p2$date.vals, dataframe.p2$medP_Radj, type='l', lty=2, col=col6a, ylim=ylims, lwd = 2,
      xaxt='n', xlab="", yaxt="n", ylab="", bty="n")
 axis(side=4,  bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
@@ -721,7 +721,6 @@ loglik_theta_bar = sim_liktab[pick.max]
 deviance.at.post.mean = -2*loglik_theta_bar 
 effective.param = var(-2*sim_likOut)/2
 dic.calc = deviance.at.post.mean + effective.param
-
 
 param1 <- cbind(
   c.text(r0_post,3),
