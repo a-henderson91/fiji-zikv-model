@@ -313,10 +313,10 @@ adapt_size_start <- round(0.1*MCMC.runs)
       accept_rate <- 0.234
     }
     
-    if(m %% min(MCMC.runs,500)==0){
-      print(c(iiM,"m"=m,  
-              "acc"=signif(accept_rate,3), 
-              "lik"=signif(sim_liktab_current,3),
+    if(m %% min(MCMC.runs,1000)==0){
+      print(c(iiM,"m" = m,  
+              "acc" = signif(accept_rate,3), 
+              "lik" = signif(sim_liktab_current,3),
               signif(thetaAlltab_current[2,'beta_h'],3),
               thetaAlltab_current[2,'beta_base'],
               thetaAlltab_current[2,'intro_base']),

@@ -82,7 +82,8 @@ source(here::here("Rscripts/load_tmrca_calc_prior.R"))
 source(here::here("Rscripts/prior_distributions.R"))
 
 if(limit.to.2013 == T){
-  priorIntro <- function(x){dunif(x, min = 1, max = 365)}
+  #priorIntro <- function(x){dunif(x, min = 1, max = 365)}
+  priorIntro <- function(x){dtruncnorm(x, a=0, b= 365, mean=intro_prior_mu, sd=intro_prior_sigma)} ## from 'Export start time Central Division.R'
   thetaAlltab[1,iiH,'intro_mid']  <- 120
   thetaAlltab[1,iiH,'intro_base']  <- 10
 }
@@ -120,7 +121,7 @@ initial_beta_h <- thetaAlltab[1,iiH,][["beta_h"]]
 run1singlesim <- zika_single_sim(initial_beta_h)
 
 if(is.nan(run1singlesim) | run1singlesim==-Inf){
-  t_rate <- seq(0.2, 0.5, 0.02)
+  t_rate <- seq(0.2, 0.23, 0.01)
     lik_search <- sapply(t_rate, function(xx){zika_single_sim(xx)})
     max_beta_h <- t_rate[which(lik_search==max(lik_search, na.rm = T))]
     thetaAlltab[1,iiH,"beta_h"] <- max_beta_h[1]
