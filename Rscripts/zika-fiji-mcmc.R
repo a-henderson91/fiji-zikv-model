@@ -130,16 +130,22 @@ if(zika_single_sim(thetaAlltab[1,iiH,][["beta_h"]])==-Inf){
 zika_single_sim(thetaAlltab[1,iiH,][["beta_h"]])
 
 ## Plot "introduction function" with initial starting values
+time.vals.temp <- seq(0, max(time.vals), 1)
+date.vals.temp <- time.vals.temp + startdate
 intro_plot_vals <- as.data.frame(t(thetaAlltab[1,iiH,]))
-intro_plot <- sapply(time.vals, function(xx){intro_f(xx, 
+intro_plot <- sapply(time.vals.temp, function(xx){intro_f(xx, 
                                                       mid=intro_plot_vals$intro_mid,
                                                       width=intro_plot_vals$intro_width,
                                                       base=intro_plot_vals$intro_base
 )})
-plot(date.vals[1:100], intro_plot[1:100], type="l", bty="n", ylab="ZIKV introductions", xlab="Date", xaxt="n")
-axis.Date(side=1, at=seq.Date(date.vals[1], date.vals[100], by = "1 months"), "months", format = "%b%y")
+df_intro_plot <- bind_cols(
+  date.vals = date.vals.temp,
+  intro_plot = intro_plot
+) %>%
+  filter(date.vals %in% seq.Date(as.Date("2014-09-01"), as.Date("2015-03-01"), "1 day"))
+plot(df_intro_plot$date.vals, df_intro_plot$intro_plot, type="l", bty="n", ylab="ZIKV introductions", xlab="Date", xaxt="n")
+axis.Date(side=1, at=seq.Date(min(df_intro_plot$date.vals), max(df_intro_plot$date.vals), by = "1 months"), format = "%b%y")
 integrate(intro_f, -Inf, Inf)
-
 dev.copy(pdf, here::here("output/fig_supp_introFn.pdf"), 6,4)
   dev.off()
   
