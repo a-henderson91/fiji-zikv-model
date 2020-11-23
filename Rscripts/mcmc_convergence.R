@@ -3,11 +3,11 @@
 # Author: Alasdair Henderson
 # github.com/a-henderson91/fiji-zikv-model
 # - - - - - - - - - - - - - - - - - - - - - - - 
-library('devtools')
+pacman::p_load('devtools')
 #install_github('sbfnk/fitR')
 library('fitR')
-library('coda')
-library("basicMCMCplots")
+pacman::p_load('coda')
+pacman::p_load("basicMCMCplots")
 
 virus <- "ZIKV"  # DEN3 or ZIKV
 
@@ -58,12 +58,13 @@ data <- load.data.multistart(Virus = virusTab[iiH], startdate = start.output.dat
 # trace plots -------------------------------------------------------------
 m.tot <- length(list.files(path = here::here(post_file_path), pattern=paste0("*",run.name)))
 # iiM=1
-load_theta <- function(iiM, load.run.name, burnin = F, mcmc.burn = NA){
+load_theta <- function(iiM, load.run.name, burnin = F, mcmc.burn = NA, load_iiH = 1){
   load(paste0(here::here(post_file_path),"/outputR_",iiM,"_",load.run.name,".RData",sep=""))
-  theta_select <- data.frame(thetaAlltab[,iiH,])
+  theta_select <- data.frame(thetaAlltab[,load_iiH,])
   
   # Return a character vector of variable names which have 0 variance
   theta_select_names <- names(theta_select)[vapply(theta_select, function(x) var(x, na.rm = T) > 1e-10, logical(1))]
+  theta_select_names <- theta_select_names[!is.na(theta_select_names)]
   
   if(burnin == T){
     mcmc_samples <- length(sim_liktab)
@@ -82,9 +83,10 @@ load_theta <- function(iiM, load.run.name, burnin = F, mcmc.burn = NA){
   list(trace = theta_select[picks,], acceptance.rate = sum(accepttab, na.rm = T)/length(accepttab), picks = picks)
 }
 
+if(virus == "DEN3"){load_iiH <- 2}else{load_iiH <- 1}
 theta_list <- list()
 for(iiM in 1:m.tot){
-  theta_tmp <- load_theta(iiM, load.run.name = run.name, burnin = F)
+  theta_tmp <- load_theta(iiM, load.run.name = run.name, burnin = F, load_iiH = load_iiH)
   name <- paste0("theta_", iiM)
   theta_list[[name]] <- theta_tmp$trace
 }
@@ -95,7 +97,7 @@ nn_to_plot <- length(vars_to_plot)
 par(mfrow=c(ceiling(nn_to_plot/2),2))
 
 plot_function <- function(var_name, plot_abline = F){
-  cols_define <- c(col1, col2)
+  cols_define <- c(col1, col2, col7)
   plot(theta_list$theta_1[[var_name]], type='l', ylab = labs_to_plot[[var_name]], xlab = "Iteration", col = 0)
   for(iiM in 1:m.tot){
     tmp <- theta_list[[iiM]]
@@ -120,15 +122,20 @@ mcmc.burn <- 0.4
 # Re-import posteriors with burnin ----------------------------------------
 theta_list <- list()
 for(iiM in 1:m.tot){
-  theta_tmp <- load_theta(iiM, load.run.name = run.name, burnin = T, mcmc.burn = mcmc.burn)
+  theta_tmp <- load_theta(iiM, load.run.name = run.name, burnin = T, mcmc.burn = mcmc.burn, load_iiH = load_iiH)
   name <- paste0("theta_", iiM)
   theta_list[[name]] <- theta_tmp$trace
 }
 head(theta_list)
 
-labs_to_plot <- c("Transmisssion rate", "Rep. prop.","Cross-protection prop.",
-                  "False Pos.", "Sensitivity",  "intro (mid)", "intro (height)")
-names(labs_to_plot) <- vars_to_plot
+if(virus == "ZIKV"){
+  labs_to_plot <- c("Transmisssion rate", "Rep. prop.","Cross-protection prop.",
+                    "False Pos.", "Sensitivity",  "intro (mid)", "intro (height)")
+  names(labs_to_plot) <- vars_to_plot
+}else if(virus == "DEN3"){
+  labs_to_plot <- c("Transmisssion rate", "Rep. prop.","Initial immune", "Control effect")
+  names(labs_to_plot) <- vars_to_plot
+}
 
 png(here("output", paste0("traceplot_burnin_", run.name, ".png")), 
      width = 4, height = 6, units = "in",
@@ -141,6 +148,12 @@ dev.off()
 ## combine the chains
 theta_joint <- rbind(theta_list$theta_1, theta_list$theta_2)
 
+if(virus == "DEN3"){
+prior_vectorcontrol <- function(x){
+  dnorm(x, mean = 0.57, sd = 0.15) ## based on Kucharski et al. 2018 Elife
+}
+priorRec0 <- function(x){dnorm(x, 0.331, 0.25)}
+}
 pdf(here("output", paste0("mcmc_density_plots_", run.name, ".pdf")), height = 6, width = 6)
 par(mfrow=c(ceiling(nn_to_plot/2),2), mar = c(4, 4, 2, 4))
 ## beta, beta_v, beta_base, rep, chi, epsilon, rho, intro_mid, intro_base, intro_width
@@ -154,41 +167,60 @@ mtext("transmission rate", side=3, adj=0, font=2)
 hist(theta_joint$rep, main = "", xlab = "") 
 mtext("rep. prop.", side=3, adj=0, font=2)
 
-hist(theta_joint$chi, main = "", xlab = "") 
-par(new=T)
-curve(priorChi(x), col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "")
-axis(side = 4)
-mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-mtext("cross-protect", side=3, adj=0, font=2)
+if(virus == "ZIKV"){
+  hist(theta_joint$chi, main = "", xlab = "") 
+  par(new=T)
+  curve(priorChi(x), col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "")
+  axis(side = 4)
+  mtext(side = 4, "Prior", cex = 0.7, padj = 3)
+  mtext("cross-protect", side=3, adj=0, font=2)
 
-hist(theta_joint$epsilon, main = "", xlab = "", xlim = c(0,0.2)) 
-par(new=T)
-curve(priorEpsilon, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", xlim = c(0,0.2))
-axis(side = 4)
-mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-mtext("false positivity", side=3, adj=0, font=2)
 
-hist(theta_joint$alpha, main = "", xlab = "", xlim = c(0,1)) 
-par(new=T)
-curve(priorAlpha, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "")
-axis(side = 4)
-mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-mtext("sensitivity", side=3, adj=0, font=2)
+  hist(theta_joint$epsilon, main = "", xlab = "", xlim = c(0,0.2)) 
+  par(new=T)
+  curve(priorEpsilon, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", xlim = c(0,0.2))
+  axis(side = 4)
+  mtext(side = 4, "Prior", cex = 0.7, padj = 3)
+  mtext("false positivity", side=3, adj=0, font=2)
+  
+  hist(theta_joint$alpha, main = "", xlab = "", xlim = c(0,1)) 
+  par(new=T)
+  curve(priorAlpha, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "")
+  axis(side = 4)
+  mtext(side = 4, "Prior", cex = 0.7, padj = 3)
+  mtext("sensitivity", side=3, adj=0, font=2)
 
-hist(theta_joint$intro_mid, main = "", xlim = c(0,1500), xlab = "")
-par(new=T)
-curve(priorIntro, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", from = 0, to = 1500)
-axis(side = 4)
-mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-mtext("intro mid", side=3, adj=0, font=2)
+  hist(theta_joint$intro_mid, main = "", xlim = c(0,1500), xlab = "")
+  par(new=T)
+  curve(priorIntro, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", from = 0, to = 1500)
+  axis(side = 4)
+  mtext(side = 4, "Prior", cex = 0.7, padj = 3)
+  mtext("intro mid", side=3, adj=0, font=2)
+  
+  hist(theta_joint$intro_base, main = "", xlim = c(0,10), xlab = "") 
+  par(new=T)
+  curve(priorInitInf, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", from = 0, to = 10)
+  axis(side = 4)
+  mtext(side = 4, "Prior", cex = 0.7, padj = 3)
+  mtext("intro height", side=3, adj=0, font=2)
+}
 
-hist(theta_joint$intro_base, main = "", xlim = c(0,10), xlab = "") 
-par(new=T)
-curve(priorInitInf, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", from = 0, to = 10)
-axis(side = 4)
-mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-mtext("intro height", side=3, adj=0, font=2)
-
+if(virus == "DEN3"){
+  hist(theta_joint$rec0, main = "", xlim = c(0,1), xlab = "") 
+  par(new=T)
+  curve(priorRec0, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", from = 0, to = 1)
+  axis(side = 4)
+  mtext(side = 4, "Prior", cex = 0.7, padj = 3)
+  mtext("initial immune", side=3, adj=0, font=2)
+  
+  hist(theta_joint$beta_base, main = "", xlim = c(0,1), xlab = "") 
+  par(new=T)
+  curve(prior_vectorcontrol, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", from = 0, to = 1)
+  axis(side = 4)
+  mtext(side = 4, "Prior", cex = 0.7, padj = 3)
+  mtext("Control effect", side=3, adj=0, font=2)
+  
+}
 dev.off()
 
 # correlation plots -------------------------------------------------------
@@ -220,5 +252,5 @@ dev.off()
 ess_theta <- apply(theta_joint, 2, function(xx){effectiveSize(xx)})
 write.csv(signif(ess_theta,3), here::here("output", "ess_theta.csv"))
 
-x_ess_theta <- xtable::xtable(t(ess_theta), include.rownames = F)  
-xtable::print.xtable(x_ess_theta, include.rownames = F)
+#x_ess_theta <- xtable::xtable(t(ess_theta), include.rownames = F)  
+#xtable::print.xtable(x_ess_theta, include.rownames = F)
