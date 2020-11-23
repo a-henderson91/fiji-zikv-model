@@ -14,7 +14,18 @@ zika_single_sim <- function(transmission_rate){
   theta <- c(thetatab[1,],thetaAlltab[1,iiH,], theta_denv)
   theta_init <- theta_initAlltab[1,iiH,]
   
+  #theta[["intro_mid"]] <- zika_intro
   theta[["beta_h"]] <- transmission_rate
+  
+  # theta[["rep"]] <- 0.00012
+  # theta[["alpha"]] <- 0.78
+  # theta[["epsilon"]] <- 0.062
+  # theta[["intro_base"]] <- 12
+  # theta[["rep"]] <- 9.8e-5
+  # theta[["alpha"]] <- 0.81
+  # theta[["epsilon"]] <- 0.06
+  # theta[["intro_base"]] <- 4.6
+  # theta[["repvol"]] <- 0.1
   
   # check that R is > 1 before introducing 
   theta_test <- as.data.frame(t(theta))
@@ -43,6 +54,13 @@ zika_single_sim <- function(transmission_rate){
   theta[["denv_start_point"]] <- as.Date("2013-10-29") - startdate
   
   theta[["zika_start_point"]] <- theta[["intro_mid"]]
+  
+  if(!is.na(theta[['epsilon']])){
+    epsilon <- theta[['epsilon']]}else{
+      epsilon <- 0}
+  if(!is.na(theta[['alpha']])){
+    alpha <- theta[['alpha']]}else{
+      alpha <- 0}
   if(!is.na(theta[['rho']])){
     theta[["rho"]] <- 1/theta[['rho']]}else{
       theta[["rho"]] <- 0}
@@ -58,7 +76,8 @@ zika_single_sim <- function(transmission_rate){
   }else{
     theta[["eta"]] <- 0
     theta[["mu"]] <- 0}
-  
+  mu_plot <- theta[["mu"]]
+  eta_plot <- theta[["eta"]]
   # Run simulation ----------------------------------------------------------
   output <- zikv_model_ode(theta, init1, time.vals.sim=time.vals)
   
@@ -74,6 +93,37 @@ zika_single_sim <- function(transmission_rate){
   cases_est[cases_est==0] <- NA
   casecount[casecount<0] <- 0
 
+  # Compute likelihood ------------------------------------------------------
+  i=1; seroP=NULL; binom.lik=NULL
+    if(include.sero.likelihood==T){
+      for(date in seroposdates){
+        time_elapsed <- min(time.vals[date.vals<date+(dt/2) & date.vals>date-(dt/2)])
+        adjusted_pop <- theta[["npop"]]-(time_elapsed*theta[["mu"]]*theta[["npop"]])+(time_elapsed*theta[["eta"]]*theta[["npop"]])
+        modelled_R <- (min(R_traj[date.vals<date+(dt/2) & date.vals>date-(dt/2)])/adjusted_pop)
+          detected_positives <- modelled_R*alpha    ## identify alpha% of the actual positives
+          false_positives <- (1-modelled_R)*epsilon ## falsely record epsilon% of the actual negatives as positives
+          seroP[i] <- detected_positives + false_positives
+          seroP[i] <- (min(R_traj[date.vals<date+(dt/2) & date.vals>date-(dt/2)])/theta[["npop"]]) + 
+            (1 - min(R_traj[date.vals<date+(dt/2) & date.vals>date-(dt/2)])/theta[["npop"]])*epsilon
+          binom.lik[i] <- (dbinom(nLUM[i], size=nPOP[i], prob=seroP[i], log = T))
+        i <- i+1
+        }
+      }else{
+        binom.lik=0
+        }
+    
+  likelihood <- sum(binom.lik) + sum(log(dnbinom(y.vals,
+                                                 mu=theta[["rep"]]*(casecount),
+                                                 size=1/theta[["repvol"]])))
+                                     
+                                     # temp <- log(dnbinom(y.vals,
+                                     #             mu=theta[["rep"]]*(casecount),
+                                     #             size=0.001))
+                                     # plot(temp, main = sum(temp))
+                                     # dnbinom(1, mu = 5, size = 0.5)
+                                     # dnbinom(1, mu = 0, size = 0.5)
+                                     # plot(log(I_traj), ylim = c(0,10))
+                                     # plot(I_traj, ylim = c(0,100), type = "l")
   # calculate R0 ------------------------------------------------------------
   tMax <- length(casecount)
   t.start = 0
@@ -101,36 +151,9 @@ zika_single_sim <- function(transmission_rate){
   r0_post[length(r0_post)] = r0_post[length(r0_post)-1]
   decline_post= decline_ii  
   
-  # Compute likelihood ------------------------------------------------------
-  # Calculate seropositivity at pre-specified dates and corresponding likelihood
-  epsilon <- theta[["epsilon"]]
-  alpha <- theta[["alpha"]]
-  if(!is.na(theta[["mu"]])){
-    mu <- theta[["mu"]]
-    eta <- theta[["eta"]]
-  }else{
-    mu <- 0
-    eta <- 0
-  }
-    i=1; seroP=NULL; binom.lik=NULL
-      for(date in seroposdates){
-        time_elapsed <- min(time.vals[date.vals<date+(dt/2) & date.vals>date-(dt/2)])
-        adjusted_pop <- theta[["npop"]]-(time_elapsed*mu*theta[["npop"]])+(time_elapsed*eta*theta[["npop"]])
-        modelled_R <- (min(R_traj[date.vals<date+(dt/2) & date.vals>date-(dt/2)])/adjusted_pop)
-          false_positives <- modelled_R*alpha
-          false_negatives <- (1-modelled_R)*epsilon
-          seroP[i] <- modelled_R + false_negatives - false_positives
-          binom.lik[i] <- (dbinom(nLUM[i], size=nPOP[i], prob=seroP[i], log = T))
-        i <- i+1
-        }
-    
-  ln.full <- length(y.vals)
-  likelihood <- sum(binom.lik) + sum(log(dnbinom(y.vals,
-                                                 mu=theta[["rep"]]*(casecount),
-                                                 size=1/theta[["repvol"]]))) 
   # Plot simulation ---------------------------------------------------------
   plot(date.vals, casecount, type='l', col=4, lwd = 2, xlab="Year", ylab="Infections (cases)",ylim = c(0, 15000),
-       main=paste0("Start: ", startdate+theta[["intro_mid"]],"   |   lik:", signif(likelihood,4),"  |  medR0: ", signif(median(r0_post),3), " | intro:", round(total_intro,0)))
+       main=paste0(signif(sum(binom.lik),3), " Start: ", startdate+theta[["intro_mid"]],"   |   lik:", signif(likelihood,4),"  |  medR0: ", signif(median(r0_post),3), " | intro:", round(total_intro,0)))
   #points(date.vals, c(denv_data$y.vals, rep(NA, 112)), col = "gray60")
   lines(date.vals,casecountD)
   par(new=T)
@@ -144,7 +167,7 @@ zika_single_sim <- function(transmission_rate){
   plot(date.vals,rr_post,type='l',col=1, ylim=c(0,3), xlab="", ylab="")
   lines(date.vals,decline_ii, type='l',col=2, yaxt='n', xaxt='n')
   par(new=T)
-  adjusted_pop <- sapply(time.vals, function(xx){theta[["npop"]]-(xx*mu*theta[["npop"]])+(xx*eta*theta[["npop"]])})
+  adjusted_pop <- sapply(time.vals, function(xx){theta[["npop"]]-(xx*mu_plot*theta[["npop"]])+(xx*eta_plot*theta[["npop"]])})
     modelled_R_traj <- R_traj/adjusted_pop
       detected_positives <- modelled_R_traj*alpha    ## identify alpha% of the actual positives
       false_positives <- (1-modelled_R_traj)*epsilon ## falsely record epsilon% of the actual negatives as positives
