@@ -6,8 +6,8 @@
 
 virus <- "ZIKV"  # DEN3 or ZIKV
 
-output_simulations <- T
-output_diagnostics <- T
+output_simulations <- F
+output_diagnostics <- F
 ll <- 1
 
 here::here()
@@ -35,6 +35,8 @@ load_posterior_1 <- load.posteriors(load.run.name = run.name, file.path = post_f
 
 load_DENVfit_1 <- load.posteriors(load.run.name = model1_name, file.path = "posterior_denv2014fit", iiH = 2, mcmc.burn = mcmc.burn)
 
+sum(load_posterior_1$cd_trace_tab[1,])
+sum(load_DENVfit_1$cd_trace_tab[1,])
 # load data --------------------------------------------------------------
 data <- load.data.multistart.month(Virus = virusTab[iiH], startdate = start.output.date, serology.file.name = serology.excel, init.values.file.name = init.conditions.excel, add.nulls = 0) #virusTab[iiH], dataTab[iiH])
   list2env(data,globalenv())
@@ -152,6 +154,8 @@ mu <- 1/(thetatab[1,"mu"]*365.25) %>% as.numeric()
 eta <- 2.5*mu
 npop <- thetatab[1,"npop"] %>% as.numeric()
 adjusted_pop <- sapply(time.vals[1:tMax], function(xx){npop-(xx*mu*npop)+(xx*eta*npop)})
+
+set.seed(0405030201)
 for(ii in 1:btsp){
   pick <- sample(picks, 1)
   if(!is.na(thetatab[pick,'epsilon'])){
@@ -253,7 +257,7 @@ plot(plot_fig2A$dates, plot_fig2A$y.vals.plot, col=col1, cex=0.8, pch=16, bty='n
      xaxt="n")
 axis.Date(1, at=seq(min(plot_fig2A$dates), max(plot_fig2A$dates), by="years"), 
           labels=format(seq(min(plot_fig2A$dates), max(plot_fig2A$dates), by="years"),"%Y"), las=1)
-lines(plot_fig2A$dates,plot_fig2A$medP, col=col1, lty=2)
+lines(plot_fig2A$dates,plot_fig2A$medP, col=col1, lty=4)
 polygon(c(plot_fig2A$dates, rev(plot_fig2A$dates)),
         c(plot_fig2A$ciP1, rev(plot_fig2A$ciP2)), col=col1a, lty=0)
   if(virus == "DEN3"){
@@ -455,12 +459,17 @@ dev.copy(pdf, paste0("output/fig2_modelOutputs", run.name,".pdf"), 12, 6)
   dev.off()
 
 # Fig 2 SI - ZIKV with DENV reporting  ------------------------------------
-date.vals.wk <- c(1:length(medD)*7)+startdate
+par(mfrow = c(1,1))
+date.vals.wk <- c(1:length(medD)*7) + startdate
+denv_data_max <- max(denv_data$time.vals) + startdate
+
 dfFakeZikaPlot <- tibble("date.vals"=date.vals.wk, medD, ciD1, ciD2) %>%
+  filter(date.vals  <= denv_data_max) %>%
+  bind_cols("denv_cases" = denv_data$y.vals) %>%
   mutate(mm = lubridate::month(date.vals), 
          yyyy = lubridate::year(date.vals)) %>%
   group_by(yyyy, mm) %>% 
-  summarise(medD = sum(medD), ciD1 = sum(ciD1), ciD2 = sum(ciD2), .groups = "drop") 
+  summarise(denv_cases = sum(denv_cases), medD = sum(medD), ciD1 = sum(ciD1), ciD2 = sum(ciD2), .groups = "drop") 
 dfFakeZikaPlot$time_vals <- row(dfFakeZikaPlot)[,1]*dt
 dfFakeZikaPlot$date_vals <- dfFakeZikaPlot$time_vals + startdate
 
@@ -480,9 +489,11 @@ plot(date.vals, medZfake, col=col1, cex=0.8, pch=16, bty='n',
   lines(dfFakeZikaPlot$date_vals, dfFakeZikaPlot$medD, col = col2)
   polygon(c(dfFakeZikaPlot$date_vals, rev(dfFakeZikaPlot$date_vals)),
           c(dfFakeZikaPlot$ciD1, rev(dfFakeZikaPlot$ciD2)), col=col2a, lty=0)
+  lines(dfFakeZikaPlot$date_vals, dfFakeZikaPlot$denv_cases, type = 'h', col = col2, lwd = 3)
   axis(side=2,  bty='l', col.ticks = 1, col=1, col.axis=1, col.lab=1)
   mtext("Estimated DENV-3 cases", side=2, line=2, col=col2) # Label for 2nd axis
   grid(NA,NULL, lty = 1, col = colgrid) 
+    
 dev.copy(pdf, paste0("output/siFig_sameReporting", run.name,".pdf"), 12, 6)
   dev.off()
   
@@ -503,7 +514,7 @@ dev.copy(pdf, paste0("output/siFig_sameReporting", run.name,".pdf"), 12, 6)
 #   polygon(c(dataframe.p3$date.vals, rev(dataframe.p3$date.vals)),
 #           c(ci1_takeoff, rev(ci2_takeoff)), col=col5a, lty=0)
   ##????
-    
+      
 # Figure 3 - introduction dynamics ----------------------------------------
 if(output_simulations==T){
   thetaMax <- thetatab[sim_liktab==max(sim_liktab),] %>% summarise_all(~median(.)) %>% as.numeric()
@@ -548,7 +559,7 @@ if(output_simulations==T){
 
 time.vals <- seq(0,max(data$time.vals),7)  
 dt <- 7
-  intros <- seq(365*1.5,365*2.3,90)
+  intros <- seq(365*1.8,365*2.2,45)
   zika_model_sims <- sapply(intros, function(xx){
     zikv_simulation(xx)$zika_trace
     })
@@ -561,7 +572,7 @@ dt <- 7
   zika_sims$denv_vals <- dengue_model_sims
   
   zika_sims_short <- zika_sims %>%
-    filter(date_vals >= as.Date("2013-05-01") & date_vals <= as.Date("2017-01-01")) #%>%
+    filter(date_vals >= as.Date("2013-05-01") & date_vals <= as.Date("2018-01-01")) #%>%
   
   seasonal_wave <- sapply(zika_sims_short$time_vals, function(xx){seasonal_f(xx, amp = thetaMax[["beta_v_amp"]], mid=thetaMax[["beta_v_mid"]])})
   
@@ -729,6 +740,7 @@ param1 <- cbind(
   c.text(beta_h1[picks],2),
   c.text(1/alpha_h[picks],2),
   c.text(1/gamma[picks],2),
+  c.text(rec0[picks],2),
   c.text(rep[picks],2),
   c.text(repvol[picks],2),
   c.text(amp[picks],2),
@@ -755,6 +767,7 @@ colnames(param1)=c(
   "beta_h",
   "Intrinsic incubation period",
   "Infectious period",
+  "Initial immune",
   "Reporting rate","Reporting dispersion",
   "Seasonal amplitude","Seasonal midpoint",
   "Cross immunity period","Cross protection",
@@ -766,4 +779,5 @@ colnames(param1)=c(
   "max Likelihood",
   "DIC")
 t(param1)
-write.csv(t(param1),here::here("output","paramA.csv"))
+write.csv(t(param1),here::here("output",paste0("paramA",run.name,".csv")))
+

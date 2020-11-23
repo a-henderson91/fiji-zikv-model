@@ -95,7 +95,7 @@ nn_to_plot <- length(vars_to_plot)
 par(mfrow=c(ceiling(nn_to_plot/2),2))
 
 plot_function <- function(var_name, plot_abline = F){
-  cols_define <- c(col1, col2)
+  cols_define <- c(col1, col2, col7)
   plot(theta_list$theta_1[[var_name]], type='l', ylab = labs_to_plot[[var_name]], xlab = "Iteration", col = 0)
   for(iiM in 1:m.tot){
     tmp <- theta_list[[iiM]]
