@@ -119,6 +119,7 @@ dev.copy(pdf, here::here("output/fig_supp_controlFn.pdf"), 6,4)
 source(here::here("Rscripts/zika-single-simulation.R"))
 initial_beta_h <- thetaAlltab[1,iiH,][["beta_h"]]
 run1singlesim <- zika_single_sim(initial_beta_h)
+
 if(is.nan(run1singlesim) | run1singlesim==-Inf){
   t_rate <- seq(0.2, 0.23, 0.01)
     lik_search <- sapply(t_rate, function(xx){zika_single_sim(xx)})
@@ -131,20 +132,6 @@ if(zika_single_sim(thetaAlltab[1,iiH,][["beta_h"]])==-Inf){
 }
 zika_single_sim(thetaAlltab[1,iiH,][["beta_h"]])
 
-## Plot "introduction function" with initial starting values
-intro_plot_vals <- as.data.frame(t(thetaAlltab[1,iiH,]))
-intro_plot <- sapply(time.vals, function(xx){intro_f(xx, 
-                                                      mid=intro_plot_vals$intro_mid,
-                                                      width=intro_plot_vals$intro_width,
-                                                      base=intro_plot_vals$intro_base
-)})
-plot(date.vals[1:30], intro_plot[1:30], type="l", bty="n", ylab="ZIKV introductions", xlab="Date", xaxt="n")
-  axis.Date(side=1, at=seq.Date(date.vals[1], date.vals[30], by = "1 months"), "months", format = "%b%y")
-integrate(intro_f, -Inf, Inf)
-
-dev.copy(pdf, here::here("output/fig_supp_introFn.pdf"), 6,4)
-  dev.off()
-  
 # Print starting conditions for model run --------------------------
 print("Theta initial starting conditions")
 c(thetatab[1,], thetaAlltab[1,iiH,])

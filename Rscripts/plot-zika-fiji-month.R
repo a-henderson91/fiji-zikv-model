@@ -378,6 +378,7 @@ plotDenv <- NULL
 btstrap <- sample(picks, 400, replace=T)
 btstrap_denv <- sample(load_DENVfit_1$picks, 400, replace=T)
 thetatab_denv <- load_DENVfit_1$thetatab
+set.seed(1859823675)
 for(ii in 1:length(btstrap)){
   b_ii <- btstrap[ii]
   b_denv_ii <- btstrap_denv[ii]
