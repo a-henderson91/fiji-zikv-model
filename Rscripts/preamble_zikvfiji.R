@@ -32,12 +32,12 @@ vector.control          <- T # whether to reduce transmission in March2014 when 
 include.2014.control    <- T # if False then beta_base set to 0
 limit.to.2013           <- F # if True then prior on intro time is limited to 365 (i.e. ZIKV starts in 2013)
 
-run.name <- "1119_13intro3"
-model1_name <- "1112_model1"
+run.name <- "1123_mainZIKV"
+model1_name <- "1123_model1"
 dt <- (7*52)/12
   
 ## MCMC parameters 
-MCMC.runs <- 2e4 #number of MCMC iterations 
+MCMC.runs <- 2e5 #number of MCMC iterations 
 thinning.parameter <- 1
 multichain <- c(1:3)  # n chains to run in parallel
 mcmc.burn <- 0.4

@@ -7,7 +7,7 @@
 virus <- "DEN3"  # DEN3 or ZIKV
 
 output_simulations <- F
-output_diagnostics <- T
+output_diagnostics <- F
 ll <- 1
 
 here::here()
@@ -143,6 +143,8 @@ introvector <- matrix(NA,nrow=btsp,ncol=tMax)
 cvectorDENV <- matrix(NA,nrow=btsp,ncol=tMax)
 ln_denv <- length(denv.cases)
 first_zikv <- min(which(y.vals>0))
+
+set.seed(0517365978236587236)
 for(ii in 1:btsp){
   pick <- sample(picks, 1)
   if(!is.na(thetatab[pick,'epsilon'])){
@@ -393,9 +395,9 @@ lines(dataframe.p3$date.vals, dataframe.p3$medRR, col=col7)
 polygon(c(dataframe.p3$date.vals,rev(dataframe.p3$date.vals)),
         c(dataframe.p3$lciRR,rev(dataframe.p3$uciRR)),lty=0,col=col7a)
 abline(h=1, lty=2)    
-lines(dataframe.p3$date.vals, dataframe.p3$medD, col = col3)
-polygon(c(dataframe.p3$date.vals,rev(dataframe.p3$date.vals)),
-        c(dataframe.p3$lciD,rev(dataframe.p3$uciD)),lty=0,col=col3a)
+#lines(dataframe.p3$date.vals, dataframe.p3$medD, col = col3)
+#polygon(c(dataframe.p3$date.vals,rev(dataframe.p3$date.vals)),
+#        c(dataframe.p3$lciD,rev(dataframe.p3$uciD)),lty=0,col=col3a)
 par(new=T)
 plot(dataframe.p3$date.vals, dataframe.p3$temp, type='l', col=rgb(0,0,0.1,alpha=0.4), bty="n", 
      xlab="Date", ylab="", yaxt="n")
@@ -632,7 +634,7 @@ colnames(param1)=c(
   "Seasonal amplitude","Seasonal midpoint",
   "Cross immunity period","Cross protection",
   "False positives", 
-  "False negatives", 
+  "Sensitivity", 
   "Waning Zika immunity",
   "base","grad",'mid',
   "Zika introduction date (mid)", "Number introduced", "Width introduced","Peak introduced",
