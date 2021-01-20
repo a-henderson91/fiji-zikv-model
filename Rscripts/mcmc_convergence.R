@@ -9,7 +9,7 @@ library('fitR')
 pacman::p_load('coda')
 pacman::p_load("basicMCMCplots")
 
-virus <- "ZIKV"  # DEN3 or ZIKV
+virus <- "DEN3"  # DEN3 or ZIKV
 
 ll <- 1
 
@@ -133,12 +133,13 @@ if(virus == "ZIKV"){
                     "False Pos.", "Sensitivity",  "intro (mid)", "intro (height)")
   names(labs_to_plot) <- vars_to_plot
 }else if(virus == "DEN3"){
-  labs_to_plot <- c("Transmisssion rate", "Rep. prop.","Initial immune", "Control effect")
+  labs_to_plot <- c("Transmisssion rate", "Rep. prop.","Initial immune", "Control effect", "False pos.", "Sensitivity")
   names(labs_to_plot) <- vars_to_plot
 }
 
+
 png(here("output", paste0("traceplot_burnin_", run.name, ".png")), 
-     width = 4, height = 6, units = "in",
+     width = 4, height = nn_to_plot*(2/3), units = "in",
      res = 150)
   par(mfrow=c(ceiling(nn_to_plot/2),2), mar = c(4, 4, 0.5, 0.2))
   sapply(vars_to_plot, function(xx){plot_function(xx)})
