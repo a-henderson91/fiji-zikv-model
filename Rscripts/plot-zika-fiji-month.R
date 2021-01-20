@@ -6,7 +6,7 @@
 
 virus <- "ZIKV"  # DEN3 or ZIKV
 
-output_simulations <- F
+output_simulations <- T
 output_diagnostics <- F
 ll <- 1
 
@@ -514,7 +514,6 @@ dev.copy(pdf, paste0("output/siFig_sameReporting", run.name,".pdf"), 12, 6)
 # plot(dataframe.p3$date.vals, medTakeoff, type = "l", ylim = c(0,1), col = col5)  
 #   polygon(c(dataframe.p3$date.vals, rev(dataframe.p3$date.vals)),
 #           c(ci1_takeoff, rev(ci2_takeoff)), col=col5a, lty=0)
-  ##????
       
 # Figure 3 - introduction dynamics ----------------------------------------
 if(output_simulations==T){
@@ -560,7 +559,7 @@ if(output_simulations==T){
 
 time.vals <- seq(0,max(data$time.vals),7)  
 dt <- 7
-  intros <- seq(365*1.8,365*2.2,45)
+  intros <- seq(365*1.75,365*2.2, 45)
   zika_model_sims <- sapply(intros, function(xx){
     zikv_simulation(xx)$zika_trace
     })
@@ -578,7 +577,7 @@ dt <- 7
   seasonal_wave <- sapply(zika_sims_short$time_vals, function(xx){seasonal_f(xx, amp = thetaMax[["beta_v_amp"]], mid=thetaMax[["beta_v_mid"]])})
   
   sims <- dim(zika_sims_short)[2]-3
-  pdf(here::here("output/fig3_simulations.pdf"), width = 6, height = 6)
+  pdf(here::here("output/fig3_simulations.pdf"), width = 7, height = 7)
   par(mfcol=c(sims, 1), mar=c(2,4,1,5.5)+0.1)
   ylimmaxZ <- zika_sims_short %>% pivot_longer(cols=starts_with("2")) %>% summarise(max(value)) %>% pull()
   #ylimmaxD <- dengue_sims_short %>% pivot_longer(cols=starts_with("2")) %>% summarise(max(value)) %>% pull()
@@ -598,7 +597,7 @@ dt <- 7
       #text(as.Date("2016-01-01"),ylimmax*(6/8), paste("Attack Rate","=",signif(sum(dengue_sims_short[,ii])/thetaMax[["npop"]],2)), col = col7)
   par(new=T)
     intros_series <- sapply(zika_sims_short$time_vals, function(xx){intro_f(xx, mid = intros[ii], width = thetaMax[["intro_width"]], base = thetaMax[["intro_base"]])})
-    plot(zika_sims_short$date_vals, intros_series, type="l", yaxt="n", ylab="", ylim = c(0, ceiling(thetaMax[["intro_base"]]/4)), xaxt="n", xlab="", col = col2, lty=1, bty="n", lwd = 1.25)
+    plot(zika_sims_short$date_vals, intros_series, type="l", yaxt="n", ylab="", ylim = c(0, ceiling(thetaMax[["intro_base"]]/2)), xaxt="n", xlab="", col = col2, lty=1, bty="n", lwd = 1.25)
     axis.Date(side=1, at=seq.Date(min(plot_date_series), max(plot_date_series)+180, by = "6 months"), "months", format = "%b %Y")
     axis(side = 2)
       mtext("Introductions", side = 2, line=2, col = col2)

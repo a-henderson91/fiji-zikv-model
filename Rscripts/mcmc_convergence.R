@@ -24,6 +24,7 @@ if(virus=="ZIKV"){
   post_file_path <- "posterior_denv2014fit"
 }
 source(here::here("Rscripts", preamblecode))
+if(virus == "DEN3"){model1_name <- run.name}
 
 mcmc.burn <- 0.4
 
@@ -33,7 +34,7 @@ sapply(all_files, function(xx){source(here::here("Rfunctions/", xx))})
 
 # load other necessary files ----------------------------------------------
 ## 
-source(here::here("Rscripts/load_tmrca_calc_prior.R"))
+##source(here::here("Rscripts/load_tmrca_calc_prior.R"))
 
 ## 
 labelN <- 1
@@ -126,10 +127,9 @@ for(iiM in 1:m.tot){
   name <- paste0("theta_", iiM)
   theta_list[[name]] <- theta_tmp$trace
 }
-head(theta_list)
 
 if(virus == "ZIKV"){
-  labs_to_plot <- c("Transmisssion rate", "Rep. prop.","Cross-protection prop.",
+  labs_to_plot <- c("Transmisssion rate", "Rep. prop.", "Control effect", "Cross-protection prop.",
                     "False Pos.", "Sensitivity",  "intro (mid)", "intro (height)")
   names(labs_to_plot) <- vars_to_plot
 }else if(virus == "DEN3"){
@@ -154,7 +154,13 @@ prior_vectorcontrol <- function(x){
   dnorm(x, mean = 0.57, sd = 0.15) ## based on Kucharski et al. 2018 Elife
 }
 priorRec0 <- function(x){dnorm(x, 0.331, 0.25)}
+
+priorIntro <- function(x){dunif(x, min=0, max=307)} ## DENV import mid point is 2013-11-07 (first case reported) at latest
+priorInitInf <- function(x){dunif(x, min=0, max=1000)} ## DENV import max is 1000 in one day
+priorEpsilon <- function(x){dtruncnorm(x, a=0, b=1, mean=0, sd=0.15)} ## 100% sensitivity and specificity in control panel 
+priorAlpha <- function(x){dtruncnorm(x, a=0, b=1, mean=1, sd=0.15)}
 }
+
 pdf(here("output", paste0("mcmc_density_plots_", run.name, ".pdf")), height = 6, width = 6)
 par(mfrow=c(ceiling(nn_to_plot/2),2), mar = c(4, 4, 2, 4))
 ## beta, beta_v, beta_base, rep, chi, epsilon, rho, intro_mid, intro_base, intro_width
@@ -163,48 +169,17 @@ par(new=T)
 curve(priorBeta, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "")
 axis(side = 4)
 mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-mtext("transmission rate", side=3, adj=0, font=2)
+mtext("Transmission rate", side=3, adj=0, font=2)
 
 hist(theta_joint$rep, main = "", xlab = "") 
-mtext("rep. prop.", side=3, adj=0, font=2)
-
-if(virus == "ZIKV"){
-  hist(theta_joint$chi, main = "", xlab = "") 
-  par(new=T)
-  curve(priorChi(x), col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "")
-  axis(side = 4)
-  mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-  mtext("cross-protect", side=3, adj=0, font=2)
-
-
-  hist(theta_joint$epsilon, main = "", xlab = "", xlim = c(0,0.2)) 
-  par(new=T)
-  curve(priorEpsilon, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", xlim = c(0,0.2))
-  axis(side = 4)
-  mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-  mtext("false positivity", side=3, adj=0, font=2)
+mtext("Reporting prop.", side=3, adj=0, font=2)
   
-  hist(theta_joint$alpha, main = "", xlab = "", xlim = c(0,1)) 
-  par(new=T)
-  curve(priorAlpha, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "")
-  axis(side = 4)
-  mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-  mtext("sensitivity", side=3, adj=0, font=2)
-
-  hist(theta_joint$intro_mid, main = "", xlim = c(0,1500), xlab = "")
-  par(new=T)
-  curve(priorIntro, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", from = 0, to = 1500)
-  axis(side = 4)
-  mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-  mtext("intro mid", side=3, adj=0, font=2)
-  
-  hist(theta_joint$intro_base, main = "", xlim = c(0,10), xlab = "") 
-  par(new=T)
-  curve(priorInitInf, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", from = 0, to = 10)
-  axis(side = 4)
-  mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-  mtext("intro height", side=3, adj=0, font=2)
-}
+hist(theta_joint$beta_base, main = "", xlim = c(0,1), xlab = "") 
+par(new=T)
+curve(prior_vectorcontrol, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", from = 0, to = 1)
+axis(side = 4)
+mtext(side = 4, "Prior", cex = 0.7, padj = 3)
+mtext("Control effect", side=3, adj=0, font=2)
 
 if(virus == "DEN3"){
   hist(theta_joint$rec0, main = "", xlim = c(0,1), xlab = "") 
@@ -212,16 +187,49 @@ if(virus == "DEN3"){
   curve(priorRec0, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", from = 0, to = 1)
   axis(side = 4)
   mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-  mtext("initial immune", side=3, adj=0, font=2)
+  mtext("Initial immune", side=3, adj=0, font=2)
   
-  hist(theta_joint$beta_base, main = "", xlim = c(0,1), xlab = "") 
-  par(new=T)
-  curve(prior_vectorcontrol, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", from = 0, to = 1)
-  axis(side = 4)
-  mtext(side = 4, "Prior", cex = 0.7, padj = 3)
-  mtext("Control effect", side=3, adj=0, font=2)
   
 }
+
+if(virus == "ZIKV"){
+hist(theta_joint$epsilon, main = "", xlab = "", xlim = c(0,1)) 
+par(new=T)
+curve(priorEpsilon, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", xlim = c(0,1))
+axis(side = 4)
+mtext(side = 4, "Prior", cex = 0.7, padj = 3)
+mtext("False positivity", side=3, adj=0, font=2)
+
+hist(theta_joint$alpha, main = "", xlab = "", xlim = c(0,1)) 
+par(new=T)
+curve(priorAlpha, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "")
+axis(side = 4)
+mtext(side = 4, "Prior", cex = 0.7, padj = 3)
+mtext("Sensitivity", side=3, adj=0, font=2)
+
+  
+  hist(theta_joint$chi, main = "", xlab = "") 
+  par(new=T)
+  curve(priorChi(x), col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "")
+  axis(side = 4)
+  mtext(side = 4, "Prior", cex = 0.7, padj = 3)
+  mtext("Cross-protect", side=3, adj=0, font=2)
+
+  hist(theta_joint$intro_mid, main = "", xlim = c(0,1500), xlab = "")
+  par(new=T)
+  curve(priorIntro, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", from = 0, to = 1500)
+  axis(side = 4)
+  mtext(side = 4, "Prior", cex = 0.7, padj = 3)
+  mtext("Intro mid", side=3, adj=0, font=2)
+  
+  hist(theta_joint$intro_base, main = "", xlim = c(0,10), xlab = "") 
+  par(new=T)
+  curve(priorInitInf, col = 2, lwd = 2, yaxt = "n", xaxt = "n", main = "", ylab = "", xlab = "", from = 0, to = 10)
+  axis(side = 4)
+  mtext(side = 4, "Prior", cex = 0.7, padj = 3)
+  mtext("Intro height", side=3, adj=0, font=2)
+}
+
 dev.off()
 
 # correlation plots -------------------------------------------------------
