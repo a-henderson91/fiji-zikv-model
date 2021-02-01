@@ -23,3 +23,6 @@ Optionally adjust objects in `Rscripts/preamble_zikvfiji.R`. Here you can change
 
 ## Reference
 To be added
+
+## DOI
+https://zenodo.org/badge/241614932.svg
