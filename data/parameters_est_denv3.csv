@@ -1,8 +1,7 @@
 parameters_est,compartments_est
 beta_h,
-beta_v,
 beta_base,
-intro_base,
-intro_mid,
 rec0,
-beta_width,
+rep,
+alpha,
+epsilon,

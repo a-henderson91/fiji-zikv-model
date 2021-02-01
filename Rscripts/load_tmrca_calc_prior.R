@@ -46,7 +46,7 @@ tmrca <- adjustment - (fj.C.tmrca * 365.25)
 hist(tmrca)
 
 # fit empirical distribution ----------------------------------------------
-fit <- fitdistr(tmrca, densfun="normal")  # we assume my_data ~ Normal(?,?)
+fit <- MASS::fitdistr(tmrca, densfun="normal")  # we assume my_data ~ Normal(?,?)
 hist(tmrca, pch=20, breaks=25, prob=TRUE, main="")
 curve(dnorm(x, fit$estimate[1], fit$estimate[2]), col="red", lwd=2, add=T)
 
