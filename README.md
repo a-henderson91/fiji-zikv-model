@@ -25,4 +25,4 @@ Optionally adjust objects in `Rscripts/preamble_zikvfiji.R`. Here you can change
 To be added
 
 ## DOI
-https://zenodo.org/badge/241614932.svg
+[![DOI](https://zenodo.org/badge/241614932.svg)](https://zenodo.org/badge/latestdoi/241614932)
