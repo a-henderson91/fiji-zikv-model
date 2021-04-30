@@ -22,7 +22,8 @@ Optionally adjust objects in `Rscripts/preamble_zikvfiji.R`. Here you can change
 `plot-zika-fiji.R` Analysis of model fit. Figures 1-3, table 1. 
 
 ## Reference
-To be added
+Henderson, A.D., Kama, M., Aubry, M. et al. Interactions between timing and transmissibility explain diverse flavivirus dynamics in Fiji. Nat Commun 12, 1671 (2021). https://doi.org/10.1038/s41467-021-21788-y
 
+[Link to paper](https://www.nature.com/articles/s41467-021-21788-y)
 ## DOI
 [![DOI](https://zenodo.org/badge/241614932.svg)](https://zenodo.org/badge/latestdoi/241614932)
